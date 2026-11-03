@@ -1,0 +1,19 @@
+# Optional paid configuration. Do not deploy without choosing a paid plan.
+services:
+  - type: web
+    name: allen-tender-radar
+    runtime: docker
+    plan: starter
+    region: singapore
+    healthCheckPath: /_stcore/health
+    disk:
+      name: radar-data
+      mountPath: /var/radar
+      sizeGB: 1
+    envVars:
+      - key: RADAR_REQUIRE_LOGIN
+        value: "true"
+      - key: RADAR_TEAM_PASSWORD
+        generateValue: true
+      - key: TZ
+        value: Asia/Shanghai

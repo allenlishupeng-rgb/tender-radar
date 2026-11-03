@@ -1,0 +1,1156 @@
+sources:
+- name: 全国公共资源交易平台
+  enabled: false
+  default_selected: false
+  base_url: https://www.ggzy.gov.cn/
+  crawler: ggzy_public
+  max_pages: 2
+  search_profiles:
+  - name: 工程建设-招标/资审公告
+    deal_classify: '01'
+    deal_stage: '0101'
+    announcement_type: 招标/资审公告
+  - name: 政府采购-采购/资审公告
+    deal_classify: '02'
+    deal_stage: '0201'
+    announcement_type: 采购/资审公告
+  notes: 当前全国平台 deal.ggzy.gov.cn 在本机连接不稳定，暂时禁用；只访问公开搜索结果页和公开详情页，不登录、不绕过验证码、不突破反爬。
+- name: 中国政府采购网
+  enabled: true
+  default_selected: true
+  base_url: http://www.ccgp.gov.cn/
+  crawler: ccgp_public
+  max_pages: 1
+  max_terms: 16
+  result_limit: 36
+  detail_enrichment_limit: 8
+  require_header_target: true
+  min_relevance_score: 40
+  source_timeout_seconds: 60
+  request_timeout: 8
+  default_target_regions:
+  - 全国
+  target_regions:
+  - name: 全国
+    display_zone: ''
+    zone_id: ''
+  - name: 江苏
+    display_zone: 江苏
+    zone_id: ''
+  - name: 上海
+    display_zone: 上海
+    zone_id: ''
+  - name: 浙江
+    display_zone: 浙江
+    zone_id: ''
+  - name: 安徽
+    display_zone: 安徽
+    zone_id: ''
+  - name: 重庆
+    display_zone: 重庆
+    zone_id: ''
+  - name: 湖南
+    display_zone: 湖南
+    zone_id: ''
+  - name: 长沙
+    display_zone: 长沙
+    zone_id: ''
+  - name: 贵州
+    display_zone: 贵州
+    zone_id: ''
+  - name: 贵阳
+    display_zone: 贵阳
+    zone_id: ''
+  - name: 湖北
+    display_zone: 湖北
+    zone_id: ''
+  - name: 武汉
+    display_zone: 武汉
+    zone_id: ''
+  - name: 新疆
+    display_zone: 新疆
+    zone_id: ''
+  - name: 西藏
+    display_zone: 西藏
+    zone_id: ''
+  - name: 内蒙古
+    display_zone: 内蒙古
+    zone_id: ''
+  - name: 辽宁
+    display_zone: 辽宁
+    zone_id: ''
+  - name: 吉林
+    display_zone: 吉林
+    zone_id: ''
+  - name: 黑龙江
+    display_zone: 黑龙江
+    zone_id: ''
+  - name: 河北
+    display_zone: 河北
+    zone_id: ''
+  - name: 广东
+    display_zone: 广东
+    zone_id: ''
+  - name: 福建
+    display_zone: 福建
+    zone_id: ''
+  - name: 山东
+    display_zone: 山东
+    zone_id: ''
+  - name: 云南
+    display_zone: 云南
+    zone_id: ''
+  - name: 海南
+    display_zone: 海南
+    zone_id: ''
+  - name: 北京
+    display_zone: 北京
+    zone_id: ''
+  - name: 山西
+    display_zone: 山西
+    zone_id: ''
+  - name: 天津
+    display_zone: 天津
+    zone_id: ''
+  - name: 河南
+    display_zone: 河南
+    zone_id: ''
+  - name: 广西
+    display_zone: 广西
+    zone_id: ''
+  - name: 江西
+    display_zone: 江西
+    zone_id: ''
+  - name: 陕西
+    display_zone: 陕西
+    zone_id: ''
+  - name: 甘肃
+    display_zone: 甘肃
+    zone_id: ''
+  - name: 青海
+    display_zone: 青海
+    zone_id: ''
+  - name: 宁夏
+    display_zone: 宁夏
+    zone_id: ''
+  - name: 四川
+    display_zone: 四川
+    zone_id: ''
+  bid_types:
+  - bid_type: '1'
+    announcement_type: 公开招标公告
+  - bid_type: '9'
+    announcement_type: 竞争性磋商公告
+  notes: 按中国大陆省级行政区分地区访问中国政府采购网公开搜索结果页和公开详情页，作为省级公共资源平台不稳定时的政府采购兜底；不登录、不绕过验证码、不突破反爬。
+- name: 中国招标投标公共服务平台
+  enabled: false
+  base_url: http://www.cebpubservice.com/
+  crawler: example_public_page
+  notes: 暂未接入真实公开页面适配器，已禁用，避免产生示例数据。
+- name: 江苏省公共资源交易平台
+  enabled: true
+  default_selected: true
+  base_url: https://jsggzy.jszwfw.gov.cn/
+  crawler: jiangsu_public
+  max_pages: 2
+  max_terms: 16
+  detail_enrichment_limit: 10
+  result_limit: 30
+  min_relevance_score: 25
+  source_timeout_seconds: 60
+  request_timeout: 10
+  categories:
+  - name: 建设工程-招标公告
+    categorynum: '003001001'
+    announcement_type: 招标公告/资审公告
+  - name: 政府采购-采购预告
+    categorynum: '003004001'
+    announcement_type: 采购预告
+  - name: 政府采购-采购公告
+    categorynum: '003004002'
+    announcement_type: 采购公告
+  notes: 使用江苏省公共资源交易平台公开搜索接口拉取近期公告，再本地按展陈业务关键词过滤；不登录、不绕过验证码、不突破反爬。
+- name: 苏州市公共资源交易平台
+  enabled: true
+  default_selected: true
+  base_url: https://ggzy.suzhou.gov.cn/
+  crawler: suzhou_public
+  query_strategy: crawler_managed
+  search_terms: [展厅, 展陈, 布展, 展示中心, 数字展厅, 展厅设计, 产业展示中心, 企业展厅, 展馆, 产业展厅, 产业馆, 总部展厅, 品牌展厅, 产品展示中心, 科技展厅, 企业文化展厅]
+  max_pages: 1
+  max_terms: 16
+  detail_enrichment_limit: 8
+  result_limit: 30
+  min_relevance_score: 25
+  source_timeout_seconds: 65
+  request_timeout: 8
+  notes: 使用苏州本地公共资源交易平台公开全文检索接口，覆盖建设工程、政府采购、国企采购及其他交易，再本地筛选展厅、展馆、展陈、布展、数字展厅等业务线索。
+- name: 上海市公共资源交易平台
+  enabled: true
+  default_selected: false
+  base_url: https://www.shggzy.com/
+  crawler: shanghai_public
+  max_pages: 1
+  categories: []
+  notes: ???????????????????????? robots.txt 禁止抓取搜索页和 /jyxx*/ 详情页，因此仅读取官网首页公开公告快照，保存原文链接供人工打开核验。
+- name: 浙江省公共资源交易服务平台
+  enabled: true
+  default_selected: true
+  base_url: https://ggzy.zj.gov.cn/
+  crawler: zhejiang_public
+  query_strategy: crawler_managed
+  search_terms: [展厅, 展陈, 布展, 展示中心, 数字展厅, 展厅设计, 产业展示中心, 企业展厅, 展馆, 产业展厅, 产业馆, 总部展厅, 品牌展厅, 产品展示中心, 科技展厅, 企业文化展厅]
+  max_pages: 1
+  max_terms: 16
+  detail_enrichment_limit: 8
+  result_limit: 30
+  min_relevance_score: 25
+  source_timeout_seconds: 65
+  request_timeout: 8
+  categories:
+  - name: 工程建设-招标公告
+    categorynum: '002001001'
+    announcement_type: 招标公告
+  - name: 政府采购-采购公告
+    categorynum: '002002001'
+    announcement_type: 采购公告
+  - name: 国企采购-采购公告
+    categorynum: '002011001'
+    announcement_type: 采购公告
+  notes: 使用公开搜索接口拉取近期公告，再本地按关键词过滤。
+- name: 安徽省公共资源交易监管网
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.35
+  failure_alert_threshold: 2
+  base_url: https://ggzy.ah.gov.cn/
+  crawler: anhui_public
+  max_pages: 1
+  max_terms: 4
+  result_limit: 10
+  min_relevance_score: 35
+  source_timeout_seconds: 25
+  request_timeout: 8
+  categories:
+  - name: 工程建设-招标公告
+    path: /souSuo
+    params:
+      timeParam: today
+      type: gcjszbgg
+    announcement_type: 招标公告
+  - name: 政府采购-采购公告
+    path: /zfcg/list
+    params:
+      bulletinNature: '1'
+      time: '1'
+    announcement_type: 采购公告
+  notes: 高风险降权源；当前页面解析/请求稳定性波动，默认不选。只访问公开列表页和公开详情页。
+- name: 湖北省公共资源交易平台
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.35
+  failure_alert_threshold: 2
+  base_url: https://www.hbggzyfwpt.cn/
+  crawler: hubei_public
+  max_pages: 3
+  max_terms: 4
+  result_limit: 10
+  min_relevance_score: 35
+  source_timeout_seconds: 25
+  request_timeout: 8
+  health_query: 项目
+  notes: 高风险降权源；当前抽样经常无结果，默认不选。使用湖北省公共资源交易电子服务系统公开工程建设、政府采购列表接口；不登录、不绕过验证码。
+- name: 武汉市公共资源交易信息
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.35
+  failure_alert_threshold: 2
+  base_url: https://www.hbggzyfwpt.cn/
+  crawler: wuhan_public
+  area_code: '420100'
+  area_name: 武汉
+  max_pages: 3
+  max_terms: 4
+  result_limit: 10
+  min_relevance_score: 35
+  source_timeout_seconds: 25
+  request_timeout: 8
+  health_query: 项目
+  notes: 高风险降权源；当前抽样经常无结果，默认不选。使用湖北省公共资源交易电子服务系统武汉市区域参数 currentArea=420100，单独筛选武汉市展厅、展馆、展陈、布展类项目。
+- name: 重庆市公共资源交易网
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.35
+  failure_alert_threshold: 2
+  base_url: https://www.cqggzy.com/
+  crawler: chongqing_public
+  max_pages: 1
+  max_terms: 4
+  result_limit: 10
+  min_relevance_score: 35
+  source_timeout_seconds: 25
+  request_timeout: 8
+  health_query: 展馆
+  notes: 高风险降权源；当前详情链接存在 404/页面结构波动，默认不选。访问公开搜索结果页和公开详情页；不登录、不处理验证码、不绕过反爬，按页面公开返回的预渲染数据解析。
+- name: 湖南省公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://hnsggzy.com/
+  crawler: hunan_public
+  region_code: ''
+  region_name: 湖南
+  max_pages: 3
+  max_terms: 16
+  detail_enrichment_limit: 10
+  result_limit: 24
+  min_relevance_score: 25
+  keep_quality_rejected_as_review: true
+  review_candidate_limit: 12
+  source_timeout_seconds: 60
+  request_timeout: 10
+  notes: 使用湖南省公共资源交易服务平台公开交易接口；省级来源不传 regionCode，以覆盖长沙、湘潭、邵阳等市州项目；按展厅、展馆、展陈、布展等关键词检索工程建设、政府采购和招标计划。
+- name: 长沙市公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://changsha.hnsggzy.com/
+  crawler: changsha_public
+  region_code: '430100'
+  region_name: 长沙
+  max_pages: 3
+  max_terms: 16
+  detail_enrichment_limit: 10
+  result_limit: 22
+  min_relevance_score: 25
+  source_timeout_seconds: 60
+  request_timeout: 10
+  notes: 使用湖南省公共资源交易服务平台长沙分站公开交易接口，按展厅、展馆、展陈、布展等关键词检索工程建设、政府采购和招标计划。
+- name: 贵州省公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.guizhou.gov.cn/
+  crawler: guizhou_public
+  region_name: 贵州
+  max_pages: 3
+  max_terms: 16
+  detail_enrichment_limit: 10
+  result_limit: 24
+  min_relevance_score: 25
+  keep_quality_rejected_as_review: true
+  review_candidate_limit: 12
+  source_timeout_seconds: 60
+  request_timeout: 10
+  notes: 使用贵州省公共资源交易云交易信息公开列表接口 /tradeInfo/es/list 和 detailHtml 详情页，按展厅、展馆、展陈、布展等关键词抓取，并按发布时间过滤近期项目。
+- name: 贵阳市公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.guizhou.gov.cn/
+  crawler: guiyang_public
+  region_name: 贵阳
+  max_pages: 3
+  max_terms: 16
+  detail_enrichment_limit: 10
+  result_limit: 22
+  min_relevance_score: 25
+  source_timeout_seconds: 60
+  request_timeout: 10
+  notes: 使用贵州省公共资源交易云交易信息公开列表接口 /tradeInfo/es/list 和 detailHtml 详情页，并按贵阳相关来源/标题/正文过滤展厅类项目。
+- name: 新疆维吾尔自治区公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://xj.86ztbb.com/
+  crawler: xinjiang_public
+  viewers:
+  - viewer: tenderBulletinViewer
+    announcement_type: 招标公告
+  health_query: 铁路
+  max_terms: 6
+  result_limit: 16
+  min_relevance_score: 30
+  source_timeout_seconds: 35
+  request_timeout: 8
+  notes: 使用新疆全流程电子招标交易平台公开公告接口 /queryNavBarBulletins 抓取招标公告；仅访问公开列表和公开详情页。
+- name: 西藏自治区公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.xizang.gov.cn/
+  crawler: regional_static
+  province: 西藏自治区
+  max_pages: 1
+  result_limit: 8
+  min_relevance_score: 25
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用西藏公共资源交易平台官网首页公开交易信息，解析公开招标公告、采购公告及详情页。
+- name: 内蒙古自治区公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://ggzyjy.nmg.gov.cn/
+  crawler: neimenggu_public
+  max_items: 18
+  result_limit: 12
+  min_relevance_score: 25
+  source_timeout_seconds: 30
+  request_timeout: 8
+  profiles:
+  - notice_type_name: 招标公告
+    transaction_type_name: 工程建设
+    announcement_type: 招标公告
+  - notice_type_name: 采购/资格预审公告
+    transaction_type_name: 政府采购
+    announcement_type: 采购/资格预审公告
+  notes: 使用内蒙古自治区公共资源交易网公开 JSON 接口抓取工程建设招标公告和政府采购公告；仅访问公开列表和详情页。
+- name: 辽宁省公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.ln.gov.cn/
+  crawler: liaoning_public
+  max_items: 12
+  result_limit: 10
+  min_relevance_score: 25
+  source_timeout_seconds: 30
+  request_timeout: 8
+  profiles:
+  - channelid: '219677'
+    announcement_type: 工程建设
+  - channelid: '240007'
+    announcement_type: 政府采购
+  health_query: 项目
+  notes: 使用辽宁省公共资源交易网公开搜索接口 /was5/web/search 抓取工程建设和政府采购公告；仅访问公开列表和公开详情页。
+  broad_match: true
+- name: 吉林省公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: http://www.ggzyzx.jl.gov.cn/
+  crawler: regional_static
+  province: 吉林省
+  max_pages: 1
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+    include_url_patterns:
+    - /jyxx/
+  health_query: 项目
+  notes: 使用吉林省公共资源交易中心官网首页公开交易信息抓取公告链接；该站 HTTPS 握手不稳定，当前使用可连通的 HTTP 官网地址。
+  max_items: 12
+  result_limit: 8
+  min_relevance_score: 25
+  broad_match: true
+- name: 黑龙江省公共资源交易数据
+  enabled: true
+  default_selected: false
+  base_url: https://ggzyjyw.hlj.gov.cn/
+  crawler: regional_static
+  province: 黑龙江省
+  max_pages: 1
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+    include_url_patterns:
+    - /jyfwdt/003002/
+    exclude_url_patterns:
+    - /xwdt/
+    - /about2.html
+    - /about3.html
+    - /aboutkb.html
+  health_query: 项目
+  notes: 使用黑龙江公共资源交易网官网首页公开交易信息抓取工程建设和政府采购公告链接；仅访问公开列表和公开详情页。
+  max_items: 12
+  result_limit: 8
+  min_relevance_score: 25
+  broad_match: true
+- name: 河北省公共资源交易服务平台
+  enabled: true
+  default_selected: false
+  base_url: https://szj.hebei.gov.cn/hbggfwpt/
+  crawler: hebei_public
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_terms: 6
+  detail_enrichment_limit: 5
+  result_limit: 12
+  min_relevance_score: 25
+  keep_quality_rejected_as_review: true
+  review_candidate_limit: 6
+  source_timeout_seconds: 35
+  request_timeout: 12
+  health_query: 项目
+  categories:
+  - categorynum: '003001001001'
+    announcement_type: 政府采购-采购/资审公告
+  - categorynum: '003001002001'
+    announcement_type: 工程建设-招标/资审公告
+  - categorynum: '003001002005'
+    announcement_type: 工程建设-招标计划公告
+  notes: 使用河北省公共资源交易服务平台交易大厅公开全文检索接口 /inteligentsearchnew/rest/esinteligentsearch/getFullTextDataNew，按展厅、展陈、展示中心、布展等关键词检索政府采购和工程建设近期公告；仅访问公开搜索和公开详情页，不登录、不绕过验证码或反爬。
+- name: 山东省公共资源交易网
+  enabled: true
+  default_selected: false
+  base_url: https://ggzyjy.shandong.gov.cn/
+  crawler: shandong_public
+  query_strategy: crawler_managed
+  result_limit: 8
+  min_relevance_score: 25
+  source_timeout_seconds: 10
+  request_timeout: 8
+  health_query: 项目
+  notes: 山东省公共资源交易网 robots.txt 当前声明 Disallow:/，因此该来源纳入巡检但由 adapter 合规跳过抓取；山东地区同时通过中国政府采购网分地区公开检索兜底覆盖。
+- name: 北京市公共资源交易服务平台
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.25
+  failure_alert_threshold: 2
+  base_url: https://ggzyfw.beijing.gov.cn/
+  crawler: regional_static
+  province: 北京市
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 35
+  source_timeout_seconds: 8
+  request_timeout: 6
+  broad_match: true
+  categories:
+  - name: 首页公开公告
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用北京市公共资源交易服务平台公开首页/公告入口做低频快照扫描；本机当前可能出现 SSL 握手失败，失败时合规记录状态并由中国政府采购网北京分地区检索兜底。
+- name: 天津市公共资源交易平台
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.zwfwb.tj.gov.cn/
+  crawler: regional_static
+  province: 天津市
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用天津市公共资源交易平台公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 山西省公共资源交易平台
+  enabled: true
+  default_selected: false
+  base_url: https://jyzt.sxzwfw.gov.cn/
+  crawler: regional_static
+  province: 山西省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用山西省公共资源交易平台公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 福建省公共资源交易电子公共服务平台
+  enabled: true
+  default_selected: false
+  base_url: https://ggzyfw.fujian.gov.cn/
+  crawler: regional_static
+  province: 福建省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用福建省公共资源交易电子公共服务平台公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 江西省公共资源交易平台
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.25
+  failure_alert_threshold: 2
+  base_url: https://ggzy.jiangxi.gov.cn/
+  crawler: regional_static
+  province: 江西省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 35
+  source_timeout_seconds: 8
+  request_timeout: 6
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用江西省公共资源交易平台公开首页/交易信息入口做低频扫描；本机当前可能出现 SSL 握手失败，失败时合规记录状态并由中国政府采购网江西分地区检索兜底。
+- name: 河南省公共资源交易在线监管服务平台
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.25
+  failure_alert_threshold: 2
+  base_url: https://ggzy.fgw.henan.gov.cn/
+  crawler: regional_static
+  province: 河南省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 35
+  source_timeout_seconds: 8
+  request_timeout: 6
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用河南省公共资源交易在线监管服务平台公开首页做低频扫描；河南交易中心主站在本机 SSL 握手不稳定，失败时由中国政府采购网河南分地区检索兜底。
+- name: 广东省公共资源交易平台
+  enabled: true
+  default_selected: false
+  base_url: https://ygp.gdzwfw.gov.cn/ggzy-portal/
+  crawler: regional_static
+  province: 广东省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用广东省公共资源交易平台公开入口做低频扫描；不登录、不绕过验证码或反爬。
+- name: 广西壮族自治区公共资源交易中心
+  enabled: true
+  default_selected: false
+  base_url: http://gxggzy.gxzf.gov.cn/
+  crawler: regional_static
+  province: 广西壮族自治区
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用广西壮族自治区公共资源交易中心公开首页交易信息做低频扫描；HTTPS 主站在本机握手不稳定时使用可访问的 HTTP 官网入口，不登录、不绕过验证码或反爬。
+- name: 海南省公共资源交易服务中心
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.hainan.gov.cn/
+  crawler: regional_static
+  province: 海南省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用海南省公共资源交易服务中心公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 四川省公共资源交易信息网
+  enabled: true
+  default_selected: false
+  base_url: https://ggzyjy.sc.gov.cn/
+  crawler: regional_static
+  province: 四川省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用四川省公共资源交易信息网公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 云南省公共资源交易信息网
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.yn.gov.cn/
+  crawler: regional_static
+  province: 云南省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用云南省公共资源交易信息网公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 陕西省公共资源交易中心
+  enabled: true
+  default_selected: false
+  base_url: https://www.sxggzyjy.cn/
+  crawler: regional_static
+  province: 陕西省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用全国公共资源交易平台（陕西省）公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 甘肃省公共资源交易网
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.25
+  failure_alert_threshold: 2
+  base_url: https://ggzyjy.gansu.gov.cn/
+  crawler: regional_static
+  province: 甘肃省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 35
+  source_timeout_seconds: 8
+  request_timeout: 6
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用甘肃省公共资源交易网公开首页交易信息做低频扫描；本机当前可能返回访问条件失败，失败时合规记录状态并由中国政府采购网甘肃分地区检索兜底。
+- name: 青海省公共资源交易网
+  enabled: true
+  default_selected: false
+  base_url: https://www.qhggzyjy.gov.cn/ggzy/
+  crawler: regional_static
+  province: 青海省
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用青海省公共资源交易网公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+- name: 宁夏回族自治区公共资源交易数据
+  enabled: true
+  default_selected: false
+  risk_level: 高
+  source_weight: 0.25
+  failure_alert_threshold: 2
+  base_url: https://www.ccgp-ningxia.gov.cn/
+  crawler: regional_static
+  province: 宁夏回族自治区
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 35
+  source_timeout_seconds: 8
+  request_timeout: 6
+  broad_match: true
+  categories:
+  - name: 宁夏政府采购公开信息
+    path: /
+    announcement_type: 采购公告
+  notes: 宁夏公共资源交易主站在本机连接不稳定，当前使用宁夏政府采购网公开首页作为宁夏政府采购兜底入口；同时由中国政府采购网宁夏分地区检索覆盖。
+- name: 新疆生产建设兵团公共资源交易平台
+  enabled: true
+  default_selected: false
+  base_url: https://ggzy.xjbt.gov.cn/
+  crawler: regional_static
+  province: 新疆生产建设兵团
+  query_strategy: crawler_managed
+  max_pages: 1
+  max_items: 8
+  result_limit: 6
+  min_relevance_score: 30
+  source_timeout_seconds: 10
+  request_timeout: 8
+  broad_match: true
+  categories:
+  - name: 首页交易信息
+    path: /
+    announcement_type: 招标/采购公告
+  notes: 使用新疆生产建设兵团公共资源交易平台公开首页交易信息做低频扫描，补充全国平台单列“兵团”区域；不登录、不绕过验证码或反爬。
+- name: 江浙沪上市公司展厅招投标
+  enabled: true
+  default_selected: true
+  base_url: https://www.cec-ec.com.cn/cms/channel/1xmgg0/index.htm
+  crawler: enterprise_tender
+  broad_match: true
+  lookback_days: 180
+  request_timeout: 8
+  max_items: 50
+  result_limit: 50
+  min_relevance_score: 1
+  source_timeout_seconds: 45
+  health_query: 展厅
+  notes: 监测江浙沪上市公司或上市公司体系企业的企业展厅、总部展厅、展示中心、品牌展厅公开招投标信息，以及江浙沪上市展陈服务商参与的公开招投标服务线索；正式招采公告、需求线索、服务线索分开标注。
+  public_discovery:
+    enabled: true
+    max_pages: 2
+    search_terms:
+    - 展厅
+    - 企业展厅
+    - 总部展厅
+    - 展陈
+    - 布展
+    - 展示中心
+    - 数字展厅
+    - 产业园
+    - 科技城
+    - 高新区
+    - 创新中心
+    - 未来中心
+    - 发展馆
+    - 体验中心
+    - 人工智能
+    - 机器人
+    - 智能制造
+    - 低空经济
+    - 车联网
+    - 银行展厅
+    - 酒业展厅
+    sources:
+    - name: 江苏省公共资源交易平台
+      crawler: jiangsu_public
+      base_url: http://jsggzy.jszwfw.gov.cn/
+      endpoint: http://jsggzy.jszwfw.gov.cn/inteligentsearch/rest/esinteligentsearch/getFullTextDataNew
+      referer: http://jsggzy.jszwfw.gov.cn/jyxx/tradeInfonew.html?type=zfcg
+      categories:
+      - name: 建设工程-招标公告
+        categorynum: '003001001'
+        announcement_type: 招标公告/资审公告
+      - name: 政府采购-采购公告
+        categorynum: '003004002'
+        announcement_type: 采购公告
+      - name: 政府采购-采购预告
+        categorynum: '003004001'
+        announcement_type: 采购预告
+    - name: 浙江省公共资源交易服务平台
+      crawler: zhejiang_public
+      base_url: https://ggzy.zj.gov.cn/
+      endpoint: https://ggzy.zj.gov.cn/inteligentsearch/rest/esinteligentsearch/getFullTextDataNew
+      referer: https://ggzy.zj.gov.cn/jyxxgk/list.html
+      categories:
+      - name: 工程建设-招标公告
+        categorynum: '002001001'
+        announcement_type: 招标公告
+      - name: 政府采购-采购公告
+        categorynum: '002002001'
+        announcement_type: 采购公告
+      - name: 国企采购-采购公告
+        categorynum: '002011001'
+        announcement_type: 采购公告
+    - name: 上海市公共资源交易平台
+      crawler: shanghai_public
+      base_url: https://www.shggzy.com/
+  procurement_sources:
+  - company_name: 南京熊猫汉达科技有限公司（南京熊猫体系）
+    stock_code: '600775'
+    industry: 电子信息/卫星通信
+    region: 江苏省南京市
+    fallback_title: 南京熊猫汉达科技有限公司卫星通信展厅建设项目招标公告
+    publish_date: '2026-06-18'
+    aliases:
+    - 南京熊猫汉达
+    - 熊猫汉达
+    list_urls:
+    - https://www.cec-ec.com.cn/cms/channel/1xmgg0/index.htm
+    detail_urls:
+    - https://www.cec-ec.com.cn/cms/channel/1xmgg1/54539.htm
+  - company_name: 极氪智能科技（吉利汽车体系）
+    stock_code: 0175.HK
+    industry: 新能源汽车/直营品牌空间
+    region: 浙江省杭州市
+    fallback_title: 极氪直营展厅2025-2026年度装饰装修施工年框项目招标公告
+    publish_date: '2025-02-13'
+    lead_note: 该页面为公开招标信息镜像，原公告指向吉利集团招标采购平台；用于监测浙江上市汽车集团体系直营展厅装饰装修年框机会。
+    detail_urls:
+    - https://www.qianlima.com/news/606.html
+  - company_name: 苏州金龙（金龙汽车体系）
+    stock_code: '600686'
+    industry: 客车制造/新能源商用车
+    region: 江苏省苏州市
+    fallback_title: 苏州金龙2024年度企业展厅设计招标公告
+    detail_urls:
+    - https://www.higer.com/Mobile/tender-notice/1852235754708484096.html
+  - company_name: 信泰人寿保险股份有限公司（物产中大控股体系）
+    stock_code: '600704'
+    industry: 金融保险/上市公司控股体系
+    region: 浙江省杭州市
+    fallback_title: 信泰保险企业文化展厅项目招标公告
+    lead_note: 信泰保险第一大股东为物产中大集团股份有限公司（600704.SH），该信息按上市公司控股体系展厅需求纳入监测。
+    aliases:
+    - 信泰保险
+    - 信泰人寿
+    list_urls:
+    - https://sinatay.com/procurement/procurementAnnouncement/index.do
+    - https://sinatay.com/procurement/resultPublicity/index.do
+    detail_urls:
+    - https://sinatay.com/procurement/procurementAnnouncement/detail.do?id=wc7hJUaUYwvUKT_Qgl1J0w
+    - https://sinatay.com/procurement/resultPublicity/detail.do?id=oSHi3tkARnyRpWMe8RLSeg
+  - company_name: 浙江新和成股份有限公司
+    stock_code: '002001'
+    industry: 精细化工/医药营养品/上市公司
+    region: 浙江省绍兴市
+    fallback_title: 浙江新和成股份有限公司研究院展示厅设计装修一体化项目招标公告
+    publish_date: '2025-03-17'
+    lead_note: 浙江新和成官网招标公告显示研究院展示厅设计装修一体化项目，按浙江上市公司自有展示空间需求纳入监测。
+    aliases:
+    - 新和成
+    list_urls:
+    - https://cnhu.com/searchList/zh-cn
+    detail_urls:
+    - https://cnhu.com/newsDetails/367/zh-cn
+  - company_name: 物产中大金属集团有限公司（物产中大体系）
+    stock_code: '600704'
+    industry: 供应链集成服务/上市公司体系
+    region: 浙江省杭州市
+    fallback_title: 浙金创新产业园项目（一期）4#楼展厅设计项目竞争性磋商公告
+    lead_note: 物产中大金属为物产中大集团核心成员企业，该项目为其创新产业园展厅设计正式采购公告和成交结果。
+    aliases:
+    - 物产中大金属
+    - 浙金创新产业园
+    list_urls:
+    - https://www.zmmc.com.cn/sitemap.html
+    detail_urls:
+    - https://www.zmmc.com.cn/information-disclosure/announcements/344
+    - https://www.zmmc.com.cn/information-disclosure/announcements/352
+  - company_name: 物产中大金属集团有限公司（物产中大体系）
+    stock_code: '600704'
+    industry: 供应链集成服务/上市公司体系
+    region: 浙江省杭州市
+    fallback_title: 物产中大金属集团有限公司企业文化展厅施工竞争性磋商公告
+    publish_date: '2026-04-15'
+    lead_note: 物产中大金属为物产中大集团核心成员企业，该项目为其企业文化展厅施工正式竞争性磋商公告，建设面积约241.15平方米，最高限价约383万元。
+    aliases:
+    - 物产中大金属
+    - 浙金
+    detail_urls:
+    - https://www.zmmc.com.cn/information-disclosure/announcements/417
+  lead_sources:
+  - company_name: 苏州华兴源创科技股份有限公司
+    stock_code: '688001'
+    industry: 半导体检测/智能制造装备
+    region: 江苏省苏州市工业园区
+    fallback_title: 苏州华兴源创总部展厅与5G智能工厂参访需求线索
+    detail_urls:
+    - https://www.uwh.edu.cn/dxxy/detail/912/16879.html
+  - company_name: 苏州金螳螂文化发展股份有限公司（金螳螂体系）
+    stock_code: '002081'
+    industry: 文博展陈/展览展示设计施工
+    region: 江苏省苏州市工业园区
+    fallback_title: 金螳螂文化总部大楼展陈策划与文化创意空间需求线索
+    publish_date: '2025-03-05'
+    lead_type: 江浙沪上市公司展厅需求线索
+    lead_note: 该信息用于监测江浙沪上市公司体系自有总部空间、展陈策划、文化创意展示空间建设与升级需求；不是具体招标公告。
+    detail_urls:
+    - https://www.sipac.gov.cn/szgyyq/202503zhjjhzg/202503/86abb27b70c7489cbd103e431fe9c282.shtml
+  - company_name: 天准科技
+    stock_code: '688003'
+    industry: 机器视觉/智能检测装备
+    region: 江苏省苏州市
+    fallback_title: 天准科技研发基地项目研发楼1号展厅多媒体装修工程需求线索
+    publish_date: '2024-09-27'
+    lead_type: 江浙沪上市公司展厅需求线索
+    lead_note: 该信息来自公开中标候选人公示中的候选人业绩，显示天准科技研发基地存在展厅多媒体装修工程需求；不是天准科技官网招标原文，需后续人工复核。
+    detail_urls:
+    - https://smejs.cn/jszbtb_wincandidate_show.aspx?id=271801
+  service_sources:
+  - company_name: 苏州金螳螂文化发展股份有限公司（金螳螂体系）
+    stock_code: '002081'
+    industry: 文博展陈/展览展示设计施工
+    region: 江苏省苏州市
+    fallback_title: 苏州金螳螂文化参与玉环市未来城市之窗展陈工程总承包投标
+    lead_type: 江浙沪上市公司公开招投标服务线索
+    lead_note: 该信息为公开资源交易页面，显示江浙沪上市公司体系企业参与展陈工程总承包投标，可用于跟踪其展览展示服务公开招投标动态。
+    detail_urls:
+    - https://ggzy.tzztb.zjtz.gov.cn/jyxx/002001/002001005/20260123/193329e7-6798-426b-aa21-d5b19107a377.html
+  - company_name: 上海风语筑文化科技股份有限公司
+    stock_code: '603466'
+    industry: 数字文化展示/展陈设计施工
+    region: 上海市
+    fallback_title: 上海风语筑参与博爱县博物馆陈列布展EPC项目施工标段投标
+    lead_type: 江浙沪上市公司公开招投标服务线索
+    lead_note: 该信息为公共资源交易页面，显示上海上市展陈服务商参与博物馆陈列布展EPC项目投标，可用于跟踪上海上市公司展陈公开招投标动态。
+    detail_urls:
+    - http://hnsggzyjy.henan.gov.cn/jyxx/002001/002001003/20250611/2081df67-2a33-4b8e-b3d5-64b68b23da41.html
+  monitored_companies:
+  - company_name: 南京熊猫
+    stock_code: '600775'
+    region: 江苏省南京市
+    aliases:
+    - 南京熊猫汉达
+    - 熊猫汉达
+    - 南京熊猫电子
+  - company_name: 苏州银行
+    stock_code: '002966'
+    region: 江苏省苏州市
+  - company_name: 金螳螂
+    stock_code: '002081'
+    region: 江苏省苏州市
+    aliases:
+    - 金螳螂文化
+    - 苏州金螳螂文化
+    - 金螳螂装饰
+  - company_name: 东山精密
+    stock_code: '002384'
+    region: 江苏省苏州市
+  - company_name: 安洁科技
+    stock_code: '002635'
+    region: 江苏省苏州市
+  - company_name: 科沃斯
+    stock_code: '603486'
+    region: 江苏省苏州市
+  - company_name: 莱克电气
+    stock_code: '603355'
+    region: 江苏省苏州市
+  - company_name: 天准科技
+    stock_code: '688003'
+    region: 江苏省苏州市
+    aliases:
+    - 苏州天准科技
+    - 天准科技研发基地
+  - company_name: 华兴源创
+    stock_code: '688001'
+    region: 江苏省苏州市
+    aliases:
+    - 苏州华兴源创
+    - 华兴源创科技
+  - company_name: 迈为股份
+    stock_code: '300751'
+    region: 江苏省苏州市
+  - company_name: 天孚通信
+    stock_code: '300394'
+    region: 江苏省苏州市
+  - company_name: 中天科技
+    stock_code: '600522'
+    region: 江苏省南通市
+  - company_name: 国电南瑞
+    stock_code: '600406'
+    region: 江苏省南京市
+  - company_name: 海康威视
+    stock_code: '002415'
+    region: 浙江省杭州市
+    aliases:
+    - 杭州海康威视
+    - 海康威视数字技术
+  - company_name: 大华股份
+    stock_code: '002236'
+    region: 浙江省杭州市
+    aliases:
+    - 浙江大华
+    - 大华技术
+  - company_name: 吉利汽车
+    stock_code: 0175.HK
+    region: 浙江省杭州市
+    aliases:
+    - 吉利集团
+    - 吉利控股
+    - 极氪
+    - 极氪智能科技
+    - 雷达汽车
+  - company_name: 新和成
+    stock_code: '002001'
+    region: 浙江省绍兴市
+  - company_name: 大丰实业
+    stock_code: '603081'
+    region: 浙江省宁波市
+    aliases:
+    - 浙江大丰实业
+    - 浙江大丰数艺
+    - 大丰数艺
+  - company_name: 正泰电器
+    stock_code: '601877'
+    region: 浙江省温州市
+  - company_name: 风语筑
+    stock_code: '603466'
+    region: 上海市
+    aliases:
+    - 上海风语筑
+    - 风语筑文化科技
+  - company_name: 物产中大
+    stock_code: '600704'
+    region: 浙江省杭州市
+    aliases:
+    - 信泰保险
+    - 信泰人寿
+    - 信泰人寿保险
+    - 物产中大控股
+  - company_name: 上海电气
+    stock_code: '601727'
+    region: 上海市
+  - company_name: 上汽集团
+    stock_code: '600104'
+    region: 上海市
+  - company_name: 东方明珠
+    stock_code: '600637'
+    region: 上海市
+  - company_name: 上海建工
+    stock_code: '600170'
+    region: 上海市
+- name: 上市民企企业馆机会
+  enabled: true
+  default_selected: true
+  base_url: config/enterprise_companies.yaml
+  crawler: enterprise_news
+  broad_match: true
+  max_companies: 22
+  max_links_per_company: 8
+  max_items: 40
+  result_limit: 30
+  min_relevance_score: 1
+  source_timeout_seconds: 90
+  request_timeout: 6
+  notes: 读取本地企业池中的上市公司/龙头民企官网新闻公开页面，抓取总部基地、研发中心、产业园、展示中心、企业馆、品牌馆、展厅等早期机会信号；只访问公开页面，不登录、不绕过验证码。
+future_sources: null

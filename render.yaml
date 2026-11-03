@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: allen-tender-radar
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: RADAR_REQUIRE_LOGIN
+        value: "true"
+      - key: RADAR_TEAM_PASSWORD
+        generateValue: true
+      - key: RADAR_EPHEMERAL
+        value: "true"
+      - key: TZ
+        value: Asia/Shanghai

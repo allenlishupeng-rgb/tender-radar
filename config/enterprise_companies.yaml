@@ -1,0 +1,260 @@
+companies:
+- company_name: 三一重工
+  stock_code: '600031'
+  exchange: SSE
+  industry: 工程机械
+  headquarters_city: 长沙
+  website: https://www.sanygroup.com/
+  news_urls:
+  - https://www.sanygroup.com/news/
+  priority: high
+  aliases:
+  - 三一集团
+  - 三一重工
+- company_name: 宁德时代
+  stock_code: '300750'
+  exchange: SZSE
+  industry: 新能源电池
+  headquarters_city: 宁德
+  website: https://www.catl.com/
+  news_urls:
+  - https://www.catl.com/news/
+  priority: high
+  aliases:
+  - 宁德时代
+  - CATL
+- company_name: 比亚迪
+  stock_code: '002594'
+  exchange: SZSE
+  industry: 新能源汽车
+  headquarters_city: 深圳
+  website: https://www.byd.com/
+  news_urls:
+  - https://www.byd.com/cn/news
+  priority: high
+  aliases:
+  - 比亚迪
+  - BYD
+- company_name: 汇川技术
+  stock_code: '300124'
+  exchange: SZSE
+  industry: 工业自动化
+  headquarters_city: 深圳
+  website: https://www.inovance.com/
+  news_urls:
+  - https://www.inovance.com/
+  priority: high
+  aliases:
+  - 汇川技术
+  - Inovance
+- company_name: 迈瑞医疗
+  stock_code: '300760'
+  exchange: SZSE
+  industry: 医疗器械
+  headquarters_city: 深圳
+  website: https://www.mindray.com/
+  news_urls:
+  - https://www.mindray.com/cn
+  priority: high
+  aliases:
+  - 迈瑞医疗
+  - Mindray
+- company_name: 东方雨虹
+  stock_code: '002271'
+  exchange: SZSE
+  industry: 建筑材料
+  headquarters_city: 北京
+  website: https://www.yuhong.com.cn/
+  news_urls:
+  - https://www.yuhong.com.cn/
+  priority: medium
+  aliases:
+  - 东方雨虹
+- company_name: 福耀玻璃
+  stock_code: '600660'
+  exchange: SSE
+  industry: 汽车玻璃
+  headquarters_city: 福州
+  website: https://www.fuyaogroup.com/
+  news_urls:
+  - https://www.fuyaogroup.com/
+  priority: medium
+  aliases:
+  - 福耀玻璃
+  - 福耀集团
+- company_name: 海澜之家
+  stock_code: '600398'
+  exchange: SSE
+  industry: 消费品牌
+  headquarters_city: 无锡
+  website: https://www.hla.com/
+  news_urls:
+  - https://www.hla.com/
+  priority: medium
+  aliases:
+  - 海澜之家
+- company_name: 珀莱雅
+  stock_code: '603605'
+  exchange: SSE
+  industry: 化妆品
+  headquarters_city: 杭州
+  website: https://www.proya-group.com/
+  news_urls:
+  - https://www.proya-group.com/
+  priority: medium
+  aliases:
+  - 珀莱雅
+- company_name: 恒立液压
+  stock_code: '601100'
+  exchange: SSE
+  industry: 高端装备
+  headquarters_city: 常州
+  website: https://www.henglihydraulic.com/
+  news_urls:
+  - https://www.henglihydraulic.com/
+  priority: medium
+  aliases:
+  - 恒立液压
+- company_name: 海康威视
+  stock_code: '002415'
+  exchange: SZSE
+  industry: 智能物联
+  headquarters_city: 杭州
+  website: https://www.hikvision.com/cn/
+  news_urls:
+  - https://www.hikvision.com/cn/newsroom/latest-news/
+  priority: high
+  aliases:
+  - 海康威视
+  - Hikvision
+- company_name: 科大讯飞
+  stock_code: '002230'
+  exchange: SZSE
+  industry: 人工智能
+  headquarters_city: 合肥
+  website: https://www.iflytek.com/
+  news_urls:
+  - https://www.iflytek.com/news
+  priority: high
+  aliases:
+  - 科大讯飞
+  - 讯飞
+- company_name: 中联重科
+  stock_code: '000157'
+  exchange: SZSE
+  industry: 工程机械
+  headquarters_city: 长沙
+  website: https://www.zoomlion.com/
+  news_urls:
+  - https://www.zoomlion.com/news
+  priority: high
+  aliases:
+  - 中联重科
+  - Zoomlion
+- company_name: 美的集团
+  stock_code: '000333'
+  exchange: SZSE
+  industry: 智能家电
+  headquarters_city: 佛山
+  website: https://www.midea.com/cn
+  news_urls:
+  - https://www.midea.com/cn/news
+  priority: high
+  aliases:
+  - 美的集团
+  - Midea
+- company_name: 格力电器
+  stock_code: '000651'
+  exchange: SZSE
+  industry: 智能制造
+  headquarters_city: 珠海
+  website: https://www.gree.com/
+  news_urls:
+  - https://www.gree.com/xwzx/
+  priority: high
+  aliases:
+  - 格力电器
+  - 格力
+- company_name: 海尔智家
+  stock_code: '600690'
+  exchange: SSE
+  industry: 智慧家庭
+  headquarters_city: 青岛
+  website: https://smart-home.haier.com/cn/
+  news_urls:
+  - https://smart-home.haier.com/cn/news/
+  priority: high
+  aliases:
+  - 海尔智家
+  - 海尔
+- company_name: 隆基绿能
+  stock_code: '601012'
+  exchange: SSE
+  industry: 光伏新能源
+  headquarters_city: 西安
+  website: https://www.longi.com/cn/
+  news_urls:
+  - https://www.longi.com/cn/news/
+  priority: medium
+  aliases:
+  - 隆基绿能
+  - 隆基
+- company_name: 阳光电源
+  stock_code: '300274'
+  exchange: SZSE
+  industry: 新能源装备
+  headquarters_city: 合肥
+  website: https://cn.sungrowpower.com/
+  news_urls:
+  - https://cn.sungrowpower.com/news
+  priority: medium
+  aliases:
+  - 阳光电源
+  - Sungrow
+- company_name: 通威股份
+  stock_code: '600438'
+  exchange: SSE
+  industry: 光伏新能源
+  headquarters_city: 成都
+  website: https://www.tongwei.com/
+  news_urls:
+  - https://www.tongwei.com/news.html
+  priority: medium
+  aliases:
+  - 通威股份
+  - 通威
+- company_name: 先导智能
+  stock_code: '300450'
+  exchange: SZSE
+  industry: 智能装备
+  headquarters_city: 无锡
+  website: https://www.leadchina.cn/
+  news_urls:
+  - https://www.leadchina.cn/news
+  priority: medium
+  aliases:
+  - 先导智能
+- company_name: 歌尔股份
+  stock_code: '002241'
+  exchange: SZSE
+  industry: 智能硬件
+  headquarters_city: 潍坊
+  website: https://www.goertek.com/
+  news_urls:
+  - https://www.goertek.com/news
+  priority: medium
+  aliases:
+  - 歌尔股份
+  - 歌尔
+- company_name: 宇通客车
+  stock_code: '600066'
+  exchange: SSE
+  industry: 新能源商用车
+  headquarters_city: 郑州
+  website: https://www.yutong.com/
+  news_urls:
+  - https://www.yutong.com/news
+  priority: medium
+  aliases:
+  - 宇通客车
+  - 宇通
