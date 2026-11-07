@@ -26,7 +26,9 @@ from database.db import (
     update_read_status,
     update_remark,
     update_user_score,
+    update_verified_deadline,
     upsert_many,
+    is_pending_deadline_verification,
 )
 from exporters.excel_exporter import export_to_excel
 from learning.feedback import apply_learning_suggestions, build_learning_suggestions
@@ -421,6 +423,8 @@ def render_tender_card(item: dict) -> None:
     budget = escape(item.get("budget") or "-")
     publish_date = escape(item.get("publish_date") or "-")
     deadline = escape(item.get("bid_deadline_date") or item.get("bid_deadline") or "-")
+    if item.get("deadline_verified_at"):
+        deadline += "（人工核验）"
     tender_status = escape(item.get("tender_status") or "待核验")
     profile_project_type = escape(item.get("profile_project_type") or item.get("ai_project_type") or "-")
     days_left = escape(days_left_text(item.get("days_left")))
@@ -1721,7 +1725,10 @@ rows = fetch_tenders(
 
 rows = [clean_row(row) for row in rows]
 inventory_row_count = len(rows)
-closed_deadline_count = sum(1 for row in rows if not is_open_for_tendering(row))
+# Unknown deadlines are kept out of the main list but not lost: relevant open
+# bids wait in the verification area until someone reads the original notice.
+pending_deadline_rows = [row for row in rows if is_pending_deadline_verification(row)]
+closed_deadline_count = sum(1 for row in rows if not is_open_for_tendering(row)) - len(pending_deadline_rows)
 rows = [row for row in rows if is_open_for_tendering(row)]
 review_rows = [row for row in rows if repair_text(row.get("review_bucket")) == "待研判"]
 rows = [row for row in rows if repair_text(row.get("review_bucket")) != "待研判"]
@@ -1795,8 +1802,10 @@ else:
 visibility_notes = []
 if review_hidden_count:
     visibility_notes.append(f"{review_hidden_count} 条待研判候选已折叠到下方")
+if pending_deadline_rows:
+    visibility_notes.append(f"{len(pending_deadline_rows)} 条日期不明，放在下方待核验区")
 if hidden_deadline_count:
-    visibility_notes.append(f"{hidden_deadline_count} 条截止期不足20天、已截止或日期不明")
+    visibility_notes.append(f"{hidden_deadline_count} 条截止期不足20天、已截止，或日期不明且非可投公告")
 if hidden_unrelated_count:
     visibility_notes.append(f"{hidden_unrelated_count} 条可能无关线索")
 if merged_hidden_count:
@@ -1989,6 +1998,43 @@ if rows:
         st.success(f"已导出：{output}")
 else:
     st.info("暂无线索。点击左侧“开始画像搜索”生成第一批结果。")
+
+if pending_deadline_rows:
+    pending_deadline_rows = sorted(pending_deadline_rows, key=row_sort_key)
+    with st.expander(f"待核验：截止日期不明（{len(pending_deadline_rows)}）", expanded=False):
+        st.caption(
+            "相关的可投公告，但自动提取没找到截止日期（常见于写在附件里的）。打开原文核对后填写："
+            "剩余满20天的进入主列表；不足20天的照常隐藏。人工核验的日期不会被之后的刷新覆盖。"
+        )
+        for item in pending_deadline_rows[:30]:
+            item_id = int(item["id"])
+            info_cols = st.columns([5, 2, 2, 2])
+            info_cols[0].write(item.get("title") or "未命名项目")
+            info_cols[1].write(item.get("source_name") or "未知来源")
+            info_cols[2].write(item.get("budget") or "预算待核")
+            info_cols[3].link_button("打开原文", primary_source_url(item), icon=":material/open_in_new:", key=f"verify_open_{item_id}")
+            st.caption(
+                f"发布 {item.get('publish_date') or '-'} · {item.get('display_priority') or '-'} · "
+                f"采购人 {item.get('purchaser') or '待核'}"
+            )
+            verify_cols = st.columns([2, 1, 5])
+            verified_date = verify_cols[0].date_input(
+                "核验截止日期", value=None, min_value=radar_today(), format="YYYY-MM-DD",
+                key=f"verify_deadline_{item_id}",
+            )
+            if verify_cols[1].button("保存日期", key=f"verify_save_{item_id}", icon=":material/event_available:",
+                                     disabled=verified_date is None):
+                update_verified_deadline(DB_PATH, item_id, verified_date)
+                left = (verified_date - radar_today()).days
+                st.session_state["verify_notice"] = (
+                    f"已保存：剩余 {left} 天，已进入主列表。" if left >= 20
+                    else f"已保存：剩余 {left} 天，不足20天，按规则隐藏。"
+                )
+                st.rerun()
+        if len(pending_deadline_rows) > 30:
+            st.caption(f"另有 {len(pending_deadline_rows) - 30} 条，先处理优先级更高的。")
+if st.session_state.get("verify_notice"):
+    st.success(st.session_state.pop("verify_notice"))
 
 if review_rows:
     review_rows = sorted(review_rows, key=row_sort_key)
