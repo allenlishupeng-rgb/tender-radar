@@ -30,7 +30,7 @@ from database.db import (
 )
 from exporters.excel_exporter import export_to_excel
 from learning.feedback import apply_learning_suggestions, build_learning_suggestions
-from parsers.extractors import is_open_for_tendering
+from parsers.extractors import is_open_for_tendering, radar_today
 from presentation.lead_row import normalize_lead_row
 from presentation.refresh_status import load_refresh_status
 from presentation.search_report import build_search_report, save_search_report, load_search_report
@@ -1565,7 +1565,7 @@ with st.sidebar:
         search_progress.empty()
         report = build_search_report(tenders, source_statuses, days=days, depth=search_depth)
         save_search_report(report)
-        deadline_limited_count = sum(1 for tender in tenders if not has_actionable_deadline(tender, date.today()))
+        deadline_limited_count = sum(1 for tender in tenders if not has_actionable_deadline(tender, radar_today()))
         st.session_state["search_deadline_hidden_count"] = deadline_limited_count
         count = upsert_many(DB_PATH, tenders)
         st.session_state["source_statuses"] = source_statuses

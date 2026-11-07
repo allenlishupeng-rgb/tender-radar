@@ -25,3 +25,14 @@ RADAR_TEAM_PASSWORD = "替换为你自己的长随机口令"
 本仓库只包含部署代码与公开来源配置，不包含本地数据库、公司历史样本、评分、日志和密钥。行业画像使用默认词库。
 
 [Streamlit部署文档](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy)
+
+## 开发与测试
+
+接手开发先读 `AGENTS.md`（业务规则、隐私边界、修改入口）。离线测试：
+
+```bash
+python -m pip install -r requirements-tested.txt
+python -m pytest -q
+```
+
+GitHub Actions 在每次推送时运行同一套离线测试，不访问真实招采网站。

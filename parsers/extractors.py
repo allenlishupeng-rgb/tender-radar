@@ -3,6 +3,8 @@ from datetime import date, datetime, timedelta, timezone
 
 from parsers.common import clean_text
 
+import config.settings  # noqa: F401  Applies the Beijing business timezone.
+
 
 PHONE_PATTERN = re.compile(
     r"(?:\+?86[-\s]?)?(?:1[3-9]\d{9}|0\d{2,3}[-\s]?\d{7,8})"

@@ -5,6 +5,8 @@ from typing import Any
 import yaml
 from dateutil import parser as date_parser
 
+import config.settings  # noqa: F401  Applies the Beijing business timezone.
+
 from scoring.project_profile import (
     PRIMARY_TARGET_TERMS,
     PROJECT_CONTEXT_TERMS,
