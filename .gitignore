@@ -9,3 +9,13 @@ logs/
 build/
 *.db
 *.sqlite
+# Private business data: never commit to the public repository.
+config/historical_project_profile.yaml
+data/historical_projects.csv
+招标雷达_*.md
+docs/results.*
+docs/index.html
+*.spec
+streamlit.*.log
+collection_bundle.json
+deploy/radar.env

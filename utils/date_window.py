@@ -1,6 +1,8 @@
 from datetime import date, datetime, timedelta
 from typing import Any
 
+import config.settings  # noqa: F401  Applies the Beijing business timezone.
+
 
 STRICT_RECENT_DAYS = 7
 DEFAULT_INTERACTIVE_SEARCH_DAYS = 30

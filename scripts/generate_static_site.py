@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
 from config.settings import DB_PATH, ROOT_DIR
 from database.db import build_merged_rows, fetch_tenders
 from exporters.excel_exporter import export_to_excel
-from parsers.extractors import is_open_for_tendering
+from parsers.extractors import MIN_ACTIONABLE_DAYS_LEFT, PREPARATION_DAYS, is_open_for_tendering
 from presentation.lead_row import normalize_lead_row
 from scoring.project_profile import is_public_culture_without_target
 from scoring.rules import NOTICE_STAGE_INVALID
@@ -217,7 +217,7 @@ def build_html(title: str, rows: list[dict], generated_at: str, start_date: str,
   <header>
     <h1>{escape(title)}</h1>
     <div class="subtitle">李奇的展厅项目画像雷达</div>
-    <div class="source-summary">仅显示截止剩余至少20天的项目（按北京时间自然日计算）。前期准备10天，再开展方案和投标。下载文件为生成时快照。</div>
+    <div class="source-summary">仅显示截止剩余至少{MIN_ACTIONABLE_DAYS_LEFT}天的项目（按北京时间自然日计算）。前期准备{PREPARATION_DAYS}天，再开展方案和投标。下载文件为生成时快照。</div>
     <div class="source-summary">发布时间范围：{escape(start_date)} 至 {escape(end_date)} · 生成时间：{escape(generated_at)}</div>
     <div class="source-summary">来源汇总：{escape(source_summary)}</div>
   </header>
@@ -284,7 +284,7 @@ def build_html(title: str, rows: list[dict], generated_at: str, start_date: str,
       const todayMs = Date.parse(today + 'T00:00:00+08:00');
       DATA.forEach(row => {{
         row.days_left = Math.round((Date.parse(row.bid_deadline_date + 'T00:00:00+08:00') - todayMs) / 86400000);
-        row.design_days_left = row.days_left - 10;
+        row.design_days_left = Math.max(0, row.days_left - {PREPARATION_DAYS});
       }});
       const text = q.value.trim().toLowerCase();
       const bucket = pool.value;
@@ -296,7 +296,7 @@ def build_html(title: str, rows: list[dict], generated_at: str, start_date: str,
       const pt = projectType.value;
       const ct = clientType.value;
       const filtered = DATA.filter(row =>
-        Number.isFinite(row.days_left) && row.days_left >= 20 &&
+        Number.isFinite(row.days_left) && row.days_left >= {MIN_ACTIONABLE_DAYS_LEFT} &&
         (!text || rowText(row).includes(text)) &&
         (!bucket || (bucket === '待研判' ? row.review_bucket === '待研判' : row.review_bucket !== '待研判')) &&
         (!a || row.lead_action === a) &&

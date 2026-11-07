@@ -1,13 +1,20 @@
 import json
 import re
 import sqlite3
+from datetime import date
 from pathlib import Path
 from typing import Iterable
 
 from database.models import Tender
-from parsers.extractors import annotate_deadline_fields, extract_contact_person, extract_project_no
+from parsers.extractors import (
+    annotate_deadline_fields,
+    deadline_days_left,
+    extract_contact_person,
+    extract_project_no,
+    tender_status_from_days,
+)
 from parsers.common import clean_text
-from scoring.rules import annotate_notice_stage
+from scoring.rules import NOTICE_STAGE_BID, annotate_notice_stage
 
 
 REGION_ALIASES = {
@@ -201,6 +208,8 @@ EXTRA_COLUMNS = {
     "user_score": "INTEGER",
     "user_score_updated_at": "TEXT DEFAULT ''",
     "review_bucket": "TEXT DEFAULT '主结果'",
+    # Set when a colleague read the original notice and entered the deadline.
+    "deadline_verified_at": "TEXT DEFAULT ''",
 }
 
 
@@ -383,10 +392,14 @@ def upsert_tender(conn: sqlite3.Connection, tender: Tender) -> None:
             project_no=excluded.project_no,
             contact_person=excluded.contact_person,
             contact_phone=excluded.contact_phone,
-            bid_deadline=COALESCE(NULLIF(excluded.bid_deadline, ''), tenders.bid_deadline),
-            bid_deadline_date=COALESCE(NULLIF(excluded.bid_deadline_date, ''), tenders.bid_deadline_date),
-            days_left=CASE WHEN excluded.bid_deadline_date='' THEN tenders.days_left ELSE excluded.days_left END,
-            tender_status=CASE WHEN excluded.bid_deadline_date='' THEN tenders.tender_status ELSE excluded.tender_status END,
+            bid_deadline=CASE WHEN COALESCE(tenders.deadline_verified_at, '')!='' THEN tenders.bid_deadline
+                ELSE COALESCE(NULLIF(excluded.bid_deadline, ''), tenders.bid_deadline) END,
+            bid_deadline_date=CASE WHEN COALESCE(tenders.deadline_verified_at, '')!='' THEN tenders.bid_deadline_date
+                ELSE COALESCE(NULLIF(excluded.bid_deadline_date, ''), tenders.bid_deadline_date) END,
+            days_left=CASE WHEN COALESCE(tenders.deadline_verified_at, '')!='' OR excluded.bid_deadline_date=''
+                THEN tenders.days_left ELSE excluded.days_left END,
+            tender_status=CASE WHEN COALESCE(tenders.deadline_verified_at, '')!='' OR excluded.bid_deadline_date=''
+                THEN tenders.tender_status ELSE excluded.tender_status END,
             notice_stage=excluded.notice_stage,
             important_info=excluded.important_info,
             summary=excluded.summary,
@@ -588,3 +601,36 @@ def update_user_score(db_path: Path, tender_id: int, user_score: int | None) -> 
             (user_score, user_score, tender_id),
         )
         conn.commit()
+
+
+def update_verified_deadline(db_path: Path, tender_id: int, deadline: date | None) -> None:
+    """Store a deadline a person checked in the original notice.
+
+    Verified deadlines are kept when later crawls find none or a different
+    one. Passing None clears the verification and the deadline.
+    """
+    init_db(db_path)
+    value = deadline.isoformat() if deadline else ""
+    days_left = deadline_days_left(value)
+    with connect(db_path) as conn:
+        conn.execute(
+            """
+            UPDATE tenders
+            SET bid_deadline=?, bid_deadline_date=?, days_left=?, tender_status=?,
+                deadline_verified_at=CASE WHEN ?='' THEN '' ELSE CURRENT_TIMESTAMP END,
+                updated_at=CURRENT_TIMESTAMP
+            WHERE id=?
+            """,
+            (value, value, days_left, tender_status_from_days(days_left), value, tender_id),
+        )
+        conn.commit()
+
+
+def is_pending_deadline_verification(row: dict) -> bool:
+    """A relevant open bid whose deadline nobody has found yet."""
+    return (
+        row.get("days_left") is None
+        and row.get("notice_stage") == NOTICE_STAGE_BID
+        and (row.get("review_bucket") or "主结果") != "待研判"
+        and (row.get("display_priority") or row.get("priority")) != "可能无关"
+    )

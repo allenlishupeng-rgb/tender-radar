@@ -26,15 +26,18 @@ from database.db import (
     update_read_status,
     update_remark,
     update_user_score,
+    update_verified_deadline,
     upsert_many,
+    is_pending_deadline_verification,
 )
 from exporters.excel_exporter import export_to_excel
 from learning.feedback import apply_learning_suggestions, build_learning_suggestions
-from parsers.extractors import is_open_for_tendering
+from parsers.extractors import is_open_for_tendering, radar_today
 from presentation.lead_row import normalize_lead_row
 from presentation.refresh_status import load_refresh_status
 from presentation.search_report import build_search_report, save_search_report, load_search_report
 from ui.team_access import require_team_access
+from collection_sync.bundle import BundleError, import_bundle, load_sync_state, pull_and_import, sync_settings
 from scoring.project_profile import HISTORICAL_PROFILE_PATH, PROJECT_SEARCH_TERMS, remove_public_culture_search_terms
 from scoring.rules import (
     NOTICE_STAGE_BID,
@@ -55,6 +58,10 @@ from utils.text_format import repair_text
 
 st.set_page_config(page_title="咕咕嘎嘎", page_icon=":material/radar:", layout="wide")
 require_team_access(st)
+# "local": the cloud host cannot reach mainland sites, so a computer in China
+# collects and this page only imports its bundles.
+LOCAL_COLLECTION_MODE = os.getenv("RADAR_COLLECTION_MODE", "").strip().lower() == "local"
+AUTO_SYNC_RESULT = pull_and_import(DB_PATH, report_saver=save_search_report)
 if os.getenv("RADAR_EPHEMERAL", "").lower() == "true":
     st.warning("免费云端测试环境：服务休眠或重启后，搜索记录和团队评分会重置。需要长期保留时，请启用持久化存储。")
 
@@ -416,6 +423,8 @@ def render_tender_card(item: dict) -> None:
     budget = escape(item.get("budget") or "-")
     publish_date = escape(item.get("publish_date") or "-")
     deadline = escape(item.get("bid_deadline_date") or item.get("bid_deadline") or "-")
+    if item.get("deadline_verified_at"):
+        deadline += "（人工核验）"
     tender_status = escape(item.get("tender_status") or "待核验")
     profile_project_type = escape(item.get("profile_project_type") or item.get("ai_project_type") or "-")
     days_left = escape(days_left_text(item.get("days_left")))
@@ -1536,7 +1545,51 @@ with st.sidebar:
         else:
             st.caption("AI 只会处理可投公告/情报参考中的候选线索。")
 
-    if st.button("开始画像搜索", type="primary", icon=":material/search:", width="stretch"):
+    sync_config = sync_settings()
+    with st.expander("本机采集同步", expanded=LOCAL_COLLECTION_MODE):
+        sync_state = load_sync_state()
+        if sync_state.get("generated_at"):
+            st.caption(
+                f"最近导入：{sync_state.get('collector', '本机采集')} 于 {sync_state.get('generated_at')} 生成，"
+                f"{sync_state.get('row_count', 0)} 条（{sync_state.get('origin', '-')}，"
+                f"{'已签名' if sync_state.get('signed') else '未签名'}）"
+            )
+        if sync_state.get("last_result"):
+            st.caption(f"最近检查：{sync_state.get('last_result')}")
+        if AUTO_SYNC_RESULT and AUTO_SYNC_RESULT.get("error"):
+            st.warning(f"自动拉取失败：{AUTO_SYNC_RESULT['error']}")
+        if sync_config["url"]:
+            if st.button("立即拉取本机采集结果", icon=":material/sync:", width="stretch"):
+                result = pull_and_import(DB_PATH, force=True, report_saver=save_search_report)
+                if result and result.get("error"):
+                    st.error(result["error"])
+                elif result and result.get("skipped"):
+                    st.info("已是最新采集包。")
+                elif result:
+                    st.success(f"已导入 {result['imported']} 条（{result.get('generated_at')} 生成）。")
+                else:
+                    st.info("另一位同事正在拉取，请稍后刷新。")
+        else:
+            st.caption("未配置 RADAR_SYNC_URL：可在本机运行 scripts/collect_and_sync.py 后上传采集包。")
+        uploaded_bundle = st.file_uploader("上传采集包", type=["json"], key="collection_bundle_upload")
+        if uploaded_bundle is not None and st.button("导入上传的采集包", width="stretch"):
+            try:
+                result = import_bundle(DB_PATH, uploaded_bundle.getvalue(), key=sync_config["key"],
+                                       origin="上传", report_saver=save_search_report)
+            except BundleError as exc:
+                st.error(str(exc))
+            else:
+                if result["skipped"]:
+                    st.info("这个采集包已经导入过。")
+                else:
+                    st.success(f"已导入 {result['imported']} 条。团队评分和备注保持不变。")
+
+    if LOCAL_COLLECTION_MODE:
+        st.caption("云端不直接访问招采网站：由本机采集后同步到这里。")
+        search_clicked = False
+    else:
+        search_clicked = st.button("开始画像搜索", type="primary", icon=":material/search:", width="stretch")
+    if search_clicked:
         radar_wait_slot.markdown(
             render_searching(query, len(active_source_names or [])),
             unsafe_allow_html=True,
@@ -1565,7 +1618,7 @@ with st.sidebar:
         search_progress.empty()
         report = build_search_report(tenders, source_statuses, days=days, depth=search_depth)
         save_search_report(report)
-        deadline_limited_count = sum(1 for tender in tenders if not has_actionable_deadline(tender, date.today()))
+        deadline_limited_count = sum(1 for tender in tenders if not has_actionable_deadline(tender, radar_today()))
         st.session_state["search_deadline_hidden_count"] = deadline_limited_count
         count = upsert_many(DB_PATH, tenders)
         st.session_state["source_statuses"] = source_statuses
@@ -1672,7 +1725,10 @@ rows = fetch_tenders(
 
 rows = [clean_row(row) for row in rows]
 inventory_row_count = len(rows)
-closed_deadline_count = sum(1 for row in rows if not is_open_for_tendering(row))
+# Unknown deadlines are kept out of the main list but not lost: relevant open
+# bids wait in the verification area until someone reads the original notice.
+pending_deadline_rows = [row for row in rows if is_pending_deadline_verification(row)]
+closed_deadline_count = sum(1 for row in rows if not is_open_for_tendering(row)) - len(pending_deadline_rows)
 rows = [row for row in rows if is_open_for_tendering(row)]
 review_rows = [row for row in rows if repair_text(row.get("review_bucket")) == "待研判"]
 rows = [row for row in rows if repair_text(row.get("review_bucket")) != "待研判"]
@@ -1746,8 +1802,10 @@ else:
 visibility_notes = []
 if review_hidden_count:
     visibility_notes.append(f"{review_hidden_count} 条待研判候选已折叠到下方")
+if pending_deadline_rows:
+    visibility_notes.append(f"{len(pending_deadline_rows)} 条日期不明，放在下方待核验区")
 if hidden_deadline_count:
-    visibility_notes.append(f"{hidden_deadline_count} 条截止期不足20天、已截止或日期不明")
+    visibility_notes.append(f"{hidden_deadline_count} 条截止期不足20天、已截止，或日期不明且非可投公告")
 if hidden_unrelated_count:
     visibility_notes.append(f"{hidden_unrelated_count} 条可能无关线索")
 if merged_hidden_count:
@@ -1940,6 +1998,43 @@ if rows:
         st.success(f"已导出：{output}")
 else:
     st.info("暂无线索。点击左侧“开始画像搜索”生成第一批结果。")
+
+if pending_deadline_rows:
+    pending_deadline_rows = sorted(pending_deadline_rows, key=row_sort_key)
+    with st.expander(f"待核验：截止日期不明（{len(pending_deadline_rows)}）", expanded=False):
+        st.caption(
+            "相关的可投公告，但自动提取没找到截止日期（常见于写在附件里的）。打开原文核对后填写："
+            "剩余满20天的进入主列表；不足20天的照常隐藏。人工核验的日期不会被之后的刷新覆盖。"
+        )
+        for item in pending_deadline_rows[:30]:
+            item_id = int(item["id"])
+            info_cols = st.columns([5, 2, 2, 2])
+            info_cols[0].write(item.get("title") or "未命名项目")
+            info_cols[1].write(item.get("source_name") or "未知来源")
+            info_cols[2].write(item.get("budget") or "预算待核")
+            info_cols[3].link_button("打开原文", primary_source_url(item), icon=":material/open_in_new:", key=f"verify_open_{item_id}")
+            st.caption(
+                f"发布 {item.get('publish_date') or '-'} · {item.get('display_priority') or '-'} · "
+                f"采购人 {item.get('purchaser') or '待核'}"
+            )
+            verify_cols = st.columns([2, 1, 5])
+            verified_date = verify_cols[0].date_input(
+                "核验截止日期", value=None, min_value=radar_today(), format="YYYY-MM-DD",
+                key=f"verify_deadline_{item_id}",
+            )
+            if verify_cols[1].button("保存日期", key=f"verify_save_{item_id}", icon=":material/event_available:",
+                                     disabled=verified_date is None):
+                update_verified_deadline(DB_PATH, item_id, verified_date)
+                left = (verified_date - radar_today()).days
+                st.session_state["verify_notice"] = (
+                    f"已保存：剩余 {left} 天，已进入主列表。" if left >= 20
+                    else f"已保存：剩余 {left} 天，不足20天，按规则隐藏。"
+                )
+                st.rerun()
+        if len(pending_deadline_rows) > 30:
+            st.caption(f"另有 {len(pending_deadline_rows) - 30} 条，先处理优先级更高的。")
+if st.session_state.get("verify_notice"):
+    st.success(st.session_state.pop("verify_notice"))
 
 if review_rows:
     review_rows = sorted(review_rows, key=row_sort_key)

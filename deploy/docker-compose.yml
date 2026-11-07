@@ -1,0 +1,45 @@
+# Tender Radar on your own server (Hong Kong or mainland VPS).
+#
+#   cp radar.env.example radar.env   # then edit the password and domain
+#   docker compose --env-file radar.env up -d --build
+#
+# With RADAR_DOMAIN set, Caddy obtains an HTTPS certificate automatically
+# (the domain's DNS A record must point at this server; ports 80/443 open).
+# A mainland server needs ICP filing (备案) before a domain can be served.
+# Without a domain, use the "ip-only" profile and open http://<server-ip>:8501.
+services:
+  radar:
+    build: ..
+    restart: unless-stopped
+    env_file: radar.env
+    environment:
+      RADAR_REQUIRE_LOGIN: "true"
+    volumes:
+      - radar-data:/var/radar
+    expose:
+      - "8501"
+
+  https:
+    image: caddy:2.8
+    restart: unless-stopped
+    depends_on: [radar]
+    command: caddy reverse-proxy --from ${RADAR_DOMAIN:-localhost} --to radar:8501
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+    profiles: ["https"]
+
+  ip-only:
+    image: caddy:2.8
+    restart: unless-stopped
+    depends_on: [radar]
+    command: caddy reverse-proxy --from :8501 --to radar:8501
+    ports:
+      - "8501:8501"
+    profiles: ["ip-only"]
+
+volumes:
+  radar-data:
+  caddy-data:
