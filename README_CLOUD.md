@@ -1,4 +1,56 @@
-# 招标雷达团队测试版
+# 招标雷达团队版：给同事一个网址
+
+两条路线。先用 A 免费拿到网址试用；如果国内同事打开慢或打不开，或者需要长期保存评分，改用 B。
+
+| | A. Streamlit Community Cloud | B. 自己的香港/国内服务器 |
+|---|---|---|
+| 费用 | 免费 | 轻量服务器月租（以云厂商报价为准） |
+| 网址 | `https://<自选名>.streamlit.app` | 你的域名（自动 HTTPS），或 `http://服务器IP:8501` |
+| 国内同事访问 | 海外服务器，速度和稳定性需实测 | 香港/国内节点更稳 |
+| 采集招采网站 | 大概率受限，配合本机采集同步 | 国内服务器可直接采集；香港需实测 |
+| 评分/备注保存 | 重启会丢 | Docker 数据卷长期保存 |
+
+## A. Streamlit Community Cloud（约 5 分钟）
+
+1. 打开 https://share.streamlit.io ，用 GitHub 账号 `allenlishupeng-rgb` 登录，点 **Create app → Deploy a public app from GitHub**。
+2. Repository：`allenlishupeng-rgb/tender-radar`；Branch：`main`（新功能合并前可直接选 `claude/focused-lovelace-j8jlef`）；Main file path：`streamlit_app.py`；App URL：填一个好记的名字。
+3. Advanced settings：Python 选 3.12；Secrets 填：
+
+```toml
+RADAR_TEAM_PASSWORD = "一段长随机口令"
+# 云端连不上招采网站时，再加上本机采集同步四项（见 README.md）：
+# RADAR_COLLECTION_MODE = "local"
+# RADAR_SYNC_URL = "https://api.github.com/repos/<账号>/tender-radar-data/contents/collection_bundle.json"
+# RADAR_SYNC_TOKEN = "<只读 token>"
+# RADAR_SYNC_KEY = "<签名密钥>"
+```
+
+4. Deploy。完成后把网址和口令分别发给同事（口令不要和网址放在同一条消息里）。
+5. 验收：同事用手机流量和公司网络各打开一次；在页面里点一次搜索，看“搜索覆盖与过滤原因”里有多少来源访问失败。大部分失败就打开 local 模式，由你的电脑采集。
+
+## B. 自己的服务器（Docker）
+
+适合团队长期使用。香港节点不需要备案；国内节点要用域名，必须先完成 ICP 备案。
+
+```bash
+# 服务器上（已安装 Docker）
+git clone https://github.com/allenlishupeng-rgb/tender-radar.git && cd tender-radar/deploy
+cp radar.env.example radar.env && nano radar.env        # 设置口令；有域名就填 RADAR_DOMAIN
+docker compose --env-file radar.env --profile https up -d --build     # 有域名：https://你的域名
+# 或
+docker compose --env-file radar.env --profile ip-only up -d --build   # 无域名：http://服务器IP:8501
+```
+
+- 有域名时，先把域名的 A 记录指向服务器，并在安全组放行 80/443；证书由 Caddy 自动申请和续期。
+- 无域名的 `http://IP:8501` 能在所有浏览器打开，但会显示“不安全”，口令以明文传输，只适合短期试用。
+- 部署后在服务器上运行 `docker compose exec radar python scripts/check_source_health.py`，确认这台服务器能访问哪些招采来源。国内服务器通常可以直接采集，不需要本机同步。
+- 数据在 Docker 数据卷 `radar-data`，更新代码不会清空。备份：
+  `docker compose cp radar:/var/radar/data/tender_radar.db ./backup-$(date +%F).db`
+- 更新版本：`git pull && docker compose --env-file radar.env --profile https up -d --build`
+
+---
+
+## 附：Render 部署（原方案）
 
 完整 Streamlit 后端保留搜索、筛选、评分、Excel导出和20天硬门槛。部署成功后，Render 分配固定 HTTPS 网址，可在同事的电脑和手机使用，无需本机持续开机。当前文件只是部署配置，不代表线上服务已经创建。
 

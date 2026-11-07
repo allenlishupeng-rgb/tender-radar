@@ -18,3 +18,4 @@ docs/index.html
 *.spec
 streamlit.*.log
 collection_bundle.json
+deploy/radar.env
