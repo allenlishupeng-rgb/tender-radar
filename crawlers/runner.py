@@ -36,6 +36,13 @@ DEFAULT_SOURCE_QUERY_LIMIT = 8
 DEFAULT_SOURCE_RESULT_LIMIT = 18
 DEFAULT_SOURCE_MIN_RELEVANCE_SCORE = 20
 DEFAULT_SOURCE_TIMEOUT_SECONDS = 60
+DEFAULT_DETAIL_RECOVERY_LIMIT = 12
+# Share of a source's time budget held back for deadline recovery while
+# relevant bids without a deadline are waiting.
+DETAIL_RECOVERY_RESERVE_RATIO = 0.25
+# Rough cost of one detail page (request interval plus fetch).
+DETAIL_RECOVERY_SECONDS_PER_ITEM = 4
+PRIORITY_RANK = {"高优先级": 0, "中优先级": 1, "低优先级": 2, "可能无关": 3}
 
 
 def result_date_window(days, start_date=None, end_date=None):
@@ -100,6 +107,35 @@ def source_result_limit(source: dict) -> int:
     return max(limit, 1)
 
 
+def detail_recovery_limit(source: dict) -> int:
+    try:
+        return max(int(source.get("detail_recovery_limit", DEFAULT_DETAIL_RECOVERY_LIMIT)), 0)
+    except (TypeError, ValueError):
+        return DEFAULT_DETAIL_RECOVERY_LIMIT
+
+
+def needs_deadline_recovery(tender) -> bool:
+    return tender.days_left is None and tender.notice_stage == NOTICE_STAGE_BID
+
+
+def select_recovery_candidates(tenders, limit: int) -> list:
+    """Most valuable first: priority, then relevance, then newest notice."""
+    pending = [tender for tender in tenders if needs_deadline_recovery(tender)]
+    pending.sort(key=lambda tender: tender.publish_date or "", reverse=True)
+    pending.sort(key=lambda tender: (
+        PRIORITY_RANK.get(tender.priority, len(PRIORITY_RANK)),
+        -int(tender.relevance_score or 0),
+    ))
+    return pending[:max(limit, 0)]
+
+
+def recovery_reserve_seconds(total_seconds: float, pending_count: int, limit: int) -> float:
+    if pending_count <= 0 or limit <= 0:
+        return 0.0
+    wanted = min(pending_count, limit) * DETAIL_RECOVERY_SECONDS_PER_ITEM
+    return min(float(wanted), total_seconds * DETAIL_RECOVERY_RESERVE_RATIO)
+
+
 def source_min_relevance_score(source: dict) -> int:
     raw_score = source.get("min_relevance_score", DEFAULT_SOURCE_MIN_RELEVANCE_SCORE)
     try:
@@ -159,6 +195,7 @@ def source_diagnostic_fields(stats: dict) -> dict:
         "deadline_unknown_count": int(stats.get("deadline_unknown_count", 0)),
         "deadline_short_count": int(stats.get("deadline_short_count", 0)),
         "detail_recovered_count": int(stats.get("detail_recovered_count", 0)),
+        "detail_recovery_attempted": int(stats.get("detail_recovery_attempted", 0)),
         "elapsed_seconds": stats.get("elapsed_seconds", 0),
     }
 
@@ -341,7 +378,10 @@ def run_search_with_status(
             max_results = source_result_limit(source)
             review_limit = max(int(source.get("review_candidate_limit", 8) or 8), 1)
             review_results = []
-            source_deadline = time.monotonic() + source_timeout_seconds(source)
+            source_budget = source_timeout_seconds(source)
+            source_deadline = time.monotonic() + source_budget
+            enrich = getattr(crawler_cls, "enrich_from_detail", None)
+            recovery_limit = detail_recovery_limit(source) if callable(enrich) else 0
             result_start, result_end = result_date_window(days, start_date, end_date)
             source_days = (result_end - result_start).days + 1
             effective_start = result_start.isoformat()
@@ -349,11 +389,16 @@ def run_search_with_status(
             stop_source = False
             crawler = crawler_cls(keywords, source_config=source)
             crawler.execution_deadline = source_deadline
+            def search_deadline() -> float:
+                pending = sum(1 for item in source_results if needs_deadline_recovery(item))
+                return source_deadline - recovery_reserve_seconds(source_budget, pending, recovery_limit)
+
             for term in source_terms:
-                if time.monotonic() >= source_deadline:
+                if time.monotonic() >= search_deadline():
                     errors.append("单来源总运行超时，已切换下一个来源")
                     stop_source = True
                     break
+                crawler.execution_deadline = search_deadline()
                 crawler.last_error = ""
                 term_results = crawler.search(
                     query=term,
@@ -394,26 +439,37 @@ def run_search_with_status(
                         continue
                     stats["quality_count"] += 1
                     annotate_deadline_fields(tender)
-                    # Recover fields for relevant bids missed by adapter detail quotas.
-                    enrich = getattr(crawler, "enrich_from_detail", None)
-                    if tender.days_left is None and tender.notice_stage == NOTICE_STAGE_BID and callable(enrich) and time.monotonic() < source_deadline:
-                        enrich(tender)
-                        annotate_deadline_fields(tender)
-                        if tender.days_left is not None:
-                            stats["detail_recovered_count"] = stats.get("detail_recovered_count", 0) + 1
-                    deadline_key = "actionable_count" if is_open_for_tendering(tender) else ("deadline_unknown_count" if tender.days_left is None else "deadline_short_count")
-                    stats[deadline_key] = stats.get(deadline_key, 0) + 1
                     source_results.append(tender)
                     if len(source_results) >= max_results:
                         stop_source = True
                         break
                 if stop_source:
                     break
-                if time.monotonic() >= source_deadline:
+                if time.monotonic() >= search_deadline():
                     errors.append("单来源总运行超时，已切换下一个来源")
                     break
+            # Phase 2: spend the reserved budget on the most valuable bids whose
+            # deadline the adapter's own detail quota did not reach.
+            crawler.execution_deadline = source_deadline
+            recovery_candidates = select_recovery_candidates(source_results, recovery_limit)
+            stats["detail_recovery_attempted"] = 0
+            for tender in recovery_candidates:
+                if time.monotonic() >= source_deadline:
+                    break
+                stats["detail_recovery_attempted"] += 1
+                try:
+                    crawler.enrich_from_detail(tender)
+                except Exception as exc:  # One broken detail page must not drop the source.
+                    errors.append(f"详情补全失败：{exc}")
+                    continue
+                annotate_deadline_fields(tender)
+                if tender.days_left is not None:
+                    stats["detail_recovered_count"] = stats.get("detail_recovered_count", 0) + 1
+            for tender in source_results:
+                deadline_key = "actionable_count" if is_open_for_tendering(tender) else ("deadline_unknown_count" if tender.days_left is None else "deadline_short_count")
+                stats[deadline_key] = stats.get(deadline_key, 0) + 1
             all_source_results = [*source_results, *review_results]
-            stats["elapsed_seconds"] = round(source_timeout_seconds(source) - max(0, source_deadline - time.monotonic()), 2)
+            stats["elapsed_seconds"] = round(source_budget - max(0, source_deadline - time.monotonic()), 2)
             if all_source_results:
                 limit_note = f"已按来源上限保留 {len(source_results)} 条" if len(source_results) >= max_results else ""
                 review_note = f"待研判候选 {len(review_results)} 条" if review_results else ""
