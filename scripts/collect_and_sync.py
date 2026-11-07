@@ -118,8 +118,28 @@ def parse_args(argv=None) -> argparse.Namespace:
     return args
 
 
-def git(repo: Path, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=120)
+GIT_TIMEOUT_SECONDS = 60
+
+
+def git(repo: Path, *args: str, timeout: float = GIT_TIMEOUT_SECONDS) -> subprocess.CompletedProcess:
+    command = ["git", "-C", str(repo), *args]
+    # git prints UTF-8; Chinese Windows would otherwise decode it as GBK and crash.
+    # GIT_TERMINAL_PROMPT=0 makes a missing login fail fast instead of waiting
+    # for a hidden password prompt.
+    try:
+        return subprocess.run(
+            command, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=timeout, env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+    except FileNotFoundError:
+        raise SystemExit("找不到 git 命令：请安装 Git for Windows（https://git-scm.com/download/win），安装后重新打开 PowerShell。")
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(command, 124, "", f"git {' '.join(args)} 超过 {timeout:.0f} 秒未完成")
+
+
+def git_error(result: subprocess.CompletedProcess) -> str:
+    lines = [line.strip() for line in (result.stderr or result.stdout or "").splitlines() if line.strip()]
+    return lines[-1] if lines else f"git 退出码 {result.returncode}"
 
 
 def check_publish_dir(repo: Path) -> None:
@@ -178,8 +198,12 @@ def check(args) -> int:
         report(visibility != "public", f"数据仓库 {remote[0]}/{remote[1]}：" +
                {"private": "私有", "public": "公开（必须改为 Private）", "unknown": "无法确认可见性（网络受限）"}[visibility])
         print(f"       云端 RADAR_SYNC_URL 应为：{sync_url_for(*remote)}")
-    reachable = git(repo, "ls-remote", "--heads", "origin").returncode == 0
-    report(reachable, "可以连接数据仓库" if reachable else "连不上数据仓库：检查 GitHub 登录（git push 能否成功）")
+    listing = git(repo, "ls-remote", "--heads", "origin")
+    if listing.returncode == 0:
+        report(True, "可以连接数据仓库")
+    else:
+        report(False, "连不上数据仓库：" + git_error(listing))
+        print("       在数据仓库目录运行一次 git pull，按提示登录 GitHub 后再重试。")
     print("全部通过，可以运行采集。" if ok else "请先处理上面的问题。")
     return 0 if ok else 1
 
@@ -193,7 +217,7 @@ def publish(bundle_path: Path, repo: Path, push: bool) -> str:
         return "采集包与上次相同，无需提交"
     commit = git(repo, "commit", "-m", f"collection {time.strftime('%Y-%m-%d %H:%M')}", "--", BUNDLE_NAME)
     if commit.returncode:
-        raise SystemExit("git commit 失败：" + (commit.stderr or commit.stdout).strip())
+        raise SystemExit("git commit 失败：" + git_error(commit))
     if not push:
         return "已提交到本地数据仓库（未推送）"
     for attempt in range(4):
@@ -201,7 +225,7 @@ def publish(bundle_path: Path, repo: Path, push: bool) -> str:
         if pushed.returncode == 0:
             return "已推送到数据仓库"
         time.sleep(2 ** (attempt + 1))
-    raise SystemExit("git push 失败：" + (pushed.stderr or pushed.stdout).strip())
+    raise SystemExit("git push 失败：" + git_error(pushed))
 
 
 def main(argv=None) -> int:
