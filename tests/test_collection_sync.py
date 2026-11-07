@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 from datetime import timedelta
 
@@ -174,3 +175,68 @@ def test_collector_commits_into_private_data_clone(tmp_path):
     assert collect_and_sync.publish(bundle_path, repo, push=False) == "已提交到本地数据仓库（未推送）"
     assert collect_and_sync.publish(bundle_path, repo, push=False) == "采集包与上次相同，无需提交"
     assert (repo / "collection_bundle.json").is_file()
+
+
+# --- One-time setup on the collecting computer -------------------------------
+
+def make_clone(tmp_path, remote_url="https://github.com/allen/tender-radar-data.git"):
+    repo = tmp_path / "data-repo"
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", remote_url], check=True)
+    return repo
+
+
+def test_github_remote_parsing(tmp_path):
+    assert collect_and_sync.github_remote(make_clone(tmp_path)) == ("allen", "tender-radar-data")
+    ssh = make_clone(tmp_path / "ssh", "git@github.com:allen/data.git")
+    assert collect_and_sync.github_remote(ssh) == ("allen", "data")
+
+
+class FakeResponse:
+    def __init__(self, status, body=None):
+        self.status_code, self._body = status, body or {}
+
+    def json(self):
+        return self._body
+
+
+def test_visibility_reads_anonymous_github_api():
+    assert collect_and_sync.github_visibility("a", "b", getter=lambda *a, **k: FakeResponse(404)) == "private"
+    assert collect_and_sync.github_visibility("a", "b", getter=lambda *a, **k: FakeResponse(200, {"private": False})) == "public"
+    assert collect_and_sync.github_visibility("a", "b", getter=lambda *a, **k: FakeResponse(403)) == "unknown"
+
+
+def test_publishing_to_a_public_data_repo_is_refused(tmp_path, monkeypatch):
+    repo = make_clone(tmp_path)
+    monkeypatch.setattr(collect_and_sync, "github_visibility", lambda owner, name: "public")
+    with pytest.raises(SystemExit, match="公开"):
+        collect_and_sync.check_publish_dir(repo)
+
+
+def test_setup_saves_key_and_prints_cloud_secrets(tmp_path, monkeypatch, capsys):
+    repo = make_clone(tmp_path)
+    # parse_args() writes os.environ; register the variables so monkeypatch
+    # removes them again after this test.
+    for name in ("RADAR_SYNC_KEY", "RADAR_COLLECTOR_NAME"):
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)
+    config_path = tmp_path / "sync.local.yaml"
+    monkeypatch.setattr(collect_and_sync, "LOCAL_CONFIG_PATH", config_path)
+    monkeypatch.setattr(collect_and_sync, "github_visibility", lambda owner, name: "private")
+
+    assert collect_and_sync.main(["--setup", str(repo)]) == 0
+
+    saved = collect_and_sync.load_local_config()
+    out = capsys.readouterr().out
+    assert saved["publish_dir"] == str(repo.resolve()) and len(saved["sync_key"]) >= 40
+    assert 'RADAR_SYNC_URL = "https://api.github.com/repos/allen/tender-radar-data/contents/collection_bundle.json"' in out
+    assert f'RADAR_SYNC_KEY = "{saved["sync_key"]}"' in out
+
+    # Running setup again keeps the same key, so the cloud secret stays valid.
+    collect_and_sync.main(["--setup", str(repo)])
+    assert collect_and_sync.load_local_config()["sync_key"] == saved["sync_key"]
+
+    # Later runs pick up the saved directory and sign with the saved key.
+    args = collect_and_sync.parse_args([])
+    assert args.publish_dir == repo.resolve()
+    assert os.environ["RADAR_SYNC_KEY"] == saved["sync_key"]
