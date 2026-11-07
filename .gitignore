@@ -19,3 +19,4 @@ docs/index.html
 streamlit.*.log
 collection_bundle.json
 deploy/radar.env
+config/sync.local.yaml

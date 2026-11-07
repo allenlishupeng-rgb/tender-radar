@@ -35,21 +35,14 @@ Streamlit Community Cloud 的服务器在海外，国内政府采购站点可能
 云端工作台：每 10 分钟最多检查一次同步地址 → 校验签名 → 导入（不覆盖团队评分/备注）
 ```
 
-一次性设置：
+一次性设置（在国内电脑上）：
 
-1. 在 GitHub 新建**私有**仓库（例如 `tender-radar-data`），克隆到国内电脑。不要用本源码仓库，它是公开的；脚本也会拒绝。
-2. 为这个数据仓库创建 fine-grained token，只授予该仓库的 Contents: Read-only 权限。
-3. 生成一个长随机字符串作为签名密钥，两端都配置为 `RADAR_SYNC_KEY`。
-4. 云端 Secrets 增加：
-
-```toml
-RADAR_COLLECTION_MODE = "local"   # 隐藏云端直接搜索
-RADAR_SYNC_URL = "https://api.github.com/repos/<你的账号>/tender-radar-data/contents/collection_bundle.json"
-RADAR_SYNC_TOKEN = "<只读 token>"
-RADAR_SYNC_KEY = "<签名密钥>"
-```
-
-5. 国内电脑设置环境变量 `RADAR_SYNC_KEY`（同一个值）和 `RADAR_SYNC_REPO_DIR`（数据仓库克隆目录）。
+1. 安装 Git 和 Python 3.12，克隆本仓库并安装依赖：`python -m pip install -r requirements-tested.txt`。
+2. 把旧工作目录里的 `config/historical_project_profile.yaml` 和 `data/tender_radar.db` 复制到新克隆的同名位置。两者都被 `.gitignore` 排除，不会上传；没有画像文件时，采集只能用默认词库评分。
+3. 在 GitHub 新建**私有**仓库（例如 `tender-radar-data`，勾选 Add a README），克隆到本机，例如 `D:/tender-radar-data`。
+4. 运行向导：`python scripts/collect_and_sync.py --setup D:/tender-radar-data`。它会检查仓库确实是私有的，生成签名密钥，保存到 `config/sync.local.yaml`（不上传），并打印要粘贴到 Streamlit Secrets 的几行。
+5. 在 GitHub → Settings → Developer settings → Fine-grained tokens 创建 token：Repository access 只选数据仓库，Permissions → Contents 设为 Read-only。把它填进 Secrets 的 `RADAR_SYNC_TOKEN`。
+6. 运行 `python scripts/collect_and_sync.py --check`，全部显示“通过”即可。
 
 日常使用：双击 `scripts/collect_and_sync.cmd`，或运行
 
