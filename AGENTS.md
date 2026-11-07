@@ -18,6 +18,8 @@ ALLEN 只输入“继续 / 继续优化 / 继续完善”时，直接执行：�
 - 公告阶段、截止窗口、业务相关度、用户评分是四个独立字段；结果类公告不能当作可投。
 - 刷新不能覆盖已读、备注、反馈标签、用户评分；后续抓取的空预算/空截止日期不能擦除已有值。
 - 显式空来源列表 `[]` 不能扩展成全量搜索。
+- 采集包只含公开公告字段（`PERSONAL_FIELDS` 之外）；导入走 `upsert_many`，不能覆盖云端团队的评分、备注、已读。
+- 截止日期补全先搜索、后补全：按优先级、相关度、发布日期排序，有候选时才预留来源时间预算。
 - 只访问公开信息，遵守 robots，不绕过登录、验证码或反爬。
 - 每日自动巡检已关闭：不创建定时任务、不发送通知、不发布站点，除非 ALLEN 另行要求。
 
@@ -43,6 +45,8 @@ curl http://127.0.0.1:8501/_stcore/health   # 应返回 ok
 | 存储、去重、用户字段 | `database/db.py` |
 | 团队访问与并发搜索 | `ui/team_access.py`、`utils/shared_search.py` |
 | 搜索覆盖报告 | `presentation/search_report.py` |
+| 本机采集 → 云端同步 | `collection_sync/bundle.py`、`scripts/collect_and_sync.py` |
+| 详情补全优先级 | `crawlers/runner.py` 的 `select_recovery_candidates()` |
 | 静态页 / Excel | `scripts/generate_static_site.py`、`exporters/excel_exporter.py` |
 
 新增来源适配器：继承 `BaseCrawler`，实现 `search(query, days, start_date, end_date, regions)` 返回 `list[Tender]`，用 `last_error` 表达失败，在注册表和 YAML 中登记，并用 `tests/fixtures/` 的脱网样本测试解析。

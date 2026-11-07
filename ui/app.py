@@ -35,6 +35,7 @@ from presentation.lead_row import normalize_lead_row
 from presentation.refresh_status import load_refresh_status
 from presentation.search_report import build_search_report, save_search_report, load_search_report
 from ui.team_access import require_team_access
+from collection_sync.bundle import BundleError, import_bundle, load_sync_state, pull_and_import, sync_settings
 from scoring.project_profile import HISTORICAL_PROFILE_PATH, PROJECT_SEARCH_TERMS, remove_public_culture_search_terms
 from scoring.rules import (
     NOTICE_STAGE_BID,
@@ -55,6 +56,10 @@ from utils.text_format import repair_text
 
 st.set_page_config(page_title="咕咕嘎嘎", page_icon=":material/radar:", layout="wide")
 require_team_access(st)
+# "local": the cloud host cannot reach mainland sites, so a computer in China
+# collects and this page only imports its bundles.
+LOCAL_COLLECTION_MODE = os.getenv("RADAR_COLLECTION_MODE", "").strip().lower() == "local"
+AUTO_SYNC_RESULT = pull_and_import(DB_PATH, report_saver=save_search_report)
 if os.getenv("RADAR_EPHEMERAL", "").lower() == "true":
     st.warning("免费云端测试环境：服务休眠或重启后，搜索记录和团队评分会重置。需要长期保留时，请启用持久化存储。")
 
@@ -1536,7 +1541,51 @@ with st.sidebar:
         else:
             st.caption("AI 只会处理可投公告/情报参考中的候选线索。")
 
-    if st.button("开始画像搜索", type="primary", icon=":material/search:", width="stretch"):
+    sync_config = sync_settings()
+    with st.expander("本机采集同步", expanded=LOCAL_COLLECTION_MODE):
+        sync_state = load_sync_state()
+        if sync_state.get("generated_at"):
+            st.caption(
+                f"最近导入：{sync_state.get('collector', '本机采集')} 于 {sync_state.get('generated_at')} 生成，"
+                f"{sync_state.get('row_count', 0)} 条（{sync_state.get('origin', '-')}，"
+                f"{'已签名' if sync_state.get('signed') else '未签名'}）"
+            )
+        if sync_state.get("last_result"):
+            st.caption(f"最近检查：{sync_state.get('last_result')}")
+        if AUTO_SYNC_RESULT and AUTO_SYNC_RESULT.get("error"):
+            st.warning(f"自动拉取失败：{AUTO_SYNC_RESULT['error']}")
+        if sync_config["url"]:
+            if st.button("立即拉取本机采集结果", icon=":material/sync:", width="stretch"):
+                result = pull_and_import(DB_PATH, force=True, report_saver=save_search_report)
+                if result and result.get("error"):
+                    st.error(result["error"])
+                elif result and result.get("skipped"):
+                    st.info("已是最新采集包。")
+                elif result:
+                    st.success(f"已导入 {result['imported']} 条（{result.get('generated_at')} 生成）。")
+                else:
+                    st.info("另一位同事正在拉取，请稍后刷新。")
+        else:
+            st.caption("未配置 RADAR_SYNC_URL：可在本机运行 scripts/collect_and_sync.py 后上传采集包。")
+        uploaded_bundle = st.file_uploader("上传采集包", type=["json"], key="collection_bundle_upload")
+        if uploaded_bundle is not None and st.button("导入上传的采集包", width="stretch"):
+            try:
+                result = import_bundle(DB_PATH, uploaded_bundle.getvalue(), key=sync_config["key"],
+                                       origin="上传", report_saver=save_search_report)
+            except BundleError as exc:
+                st.error(str(exc))
+            else:
+                if result["skipped"]:
+                    st.info("这个采集包已经导入过。")
+                else:
+                    st.success(f"已导入 {result['imported']} 条。团队评分和备注保持不变。")
+
+    if LOCAL_COLLECTION_MODE:
+        st.caption("云端不直接访问招采网站：由本机采集后同步到这里。")
+        search_clicked = False
+    else:
+        search_clicked = st.button("开始画像搜索", type="primary", icon=":material/search:", width="stretch")
+    if search_clicked:
         radar_wait_slot.markdown(
             render_searching(query, len(active_source_names or [])),
             unsafe_allow_html=True,

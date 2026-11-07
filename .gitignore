@@ -17,3 +17,4 @@ docs/results.*
 docs/index.html
 *.spec
 streamlit.*.log
+collection_bundle.json

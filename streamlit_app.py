@@ -8,9 +8,11 @@ import streamlit as st
 os.environ.setdefault('RADAR_REQUIRE_LOGIN', 'true')
 os.environ.setdefault('RADAR_EPHEMERAL', 'true')
 try:
-    password = st.secrets.get('RADAR_TEAM_PASSWORD', '')
-    if password:
-        os.environ['RADAR_TEAM_PASSWORD'] = str(password)
+    for name in ('RADAR_TEAM_PASSWORD', 'RADAR_SYNC_URL', 'RADAR_SYNC_TOKEN', 'RADAR_SYNC_KEY',
+                 'RADAR_COLLECTION_MODE', 'OPENAI_API_KEY'):
+        value = st.secrets.get(name, '')
+        if value:
+            os.environ[name] = str(value)
 except FileNotFoundError:
     pass
 

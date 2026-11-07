@@ -20,6 +20,10 @@
 | `RADAR_LOG_DIR` | 日志目录，容器默认 `/var/radar/logs` |
 | `RADAR_EPHEMERAL=true` | 免费实例显示数据会重置的提醒 |
 | `PORT` | 托管平台自动设置，监听 `0.0.0.0` |
+| `RADAR_COLLECTION_MODE=local` | 云端不直接抓取，只导入本机采集包（海外主机访问不了国内站点时使用） |
+| `RADAR_SYNC_URL` / `RADAR_SYNC_TOKEN` | 私有数据仓库中采集包的地址与只读 token，见 `README.md` |
+| `RADAR_SYNC_KEY` | 采集包签名密钥，本机与云端必须一致 |
+| `RADAR_TIMEZONE` | 业务时区，默认 `CST-8`（北京时间） |
 
 无需配置AI密钥也可运行。可选AI判断沿用 `OPENAI_API_KEY`，仅在平台环境变量中配置。团队测试版共用评分和备注；同一时刻只执行一个搜索，避免多人重复请求来源网站。更换口令会要求现有会话重新登录。
 
