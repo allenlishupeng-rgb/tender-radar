@@ -240,3 +240,58 @@ def test_setup_saves_key_and_prints_cloud_secrets(tmp_path, monkeypatch, capsys)
     args = collect_and_sync.parse_args([])
     assert args.publish_dir == repo.resolve()
     assert os.environ["RADAR_SYNC_KEY"] == saved["sync_key"]
+
+
+def test_missing_git_gives_install_hint(tmp_path, monkeypatch):
+    def no_git(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(collect_and_sync.subprocess, "run", no_git)
+    with pytest.raises(SystemExit, match="Git for Windows"):
+        collect_and_sync.git(tmp_path, "status")
+
+
+def test_git_timeout_is_reported_not_raised(tmp_path, monkeypatch):
+    def slow(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(collect_and_sync.subprocess, "run", slow)
+    result = collect_and_sync.git(tmp_path, "ls-remote", timeout=5)
+    assert result.returncode == 124
+    assert "超过 5 秒" in collect_and_sync.git_error(result)
+
+
+def test_git_output_is_decoded_as_utf8_without_prompting(tmp_path, monkeypatch):
+    seen = {}
+
+    def fake_run(command, **kwargs):
+        seen.update(kwargs)
+        return subprocess.CompletedProcess(command, 128, "", "致命错误：认证失败\n")
+
+    monkeypatch.setattr(collect_and_sync.subprocess, "run", fake_run)
+    result = collect_and_sync.git(tmp_path, "ls-remote")
+    assert seen["encoding"] == "utf-8" and seen["errors"] == "replace"
+    assert seen["env"]["GIT_TERMINAL_PROMPT"] == "0"
+    assert collect_and_sync.git_error(result) == "致命错误：认证失败"
+
+
+def test_check_reports_unreachable_remote_with_git_reason(tmp_path, monkeypatch, capsys):
+    repo = make_clone(tmp_path, "https://github.com/allen/tender-radar-data.git")
+    for name in ("RADAR_SYNC_KEY", "RADAR_SYNC_REPO_DIR"):
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)
+    monkeypatch.setenv("RADAR_SYNC_KEY", "k")
+    monkeypatch.setattr(collect_and_sync, "LOCAL_CONFIG_PATH", tmp_path / "none.yaml")
+    monkeypatch.setattr(collect_and_sync, "github_visibility", lambda owner, name: "private")
+    real_git = collect_and_sync.git
+
+    def fake_git(repo_path, *args, **kwargs):
+        if args[:1] == ("ls-remote",):
+            return subprocess.CompletedProcess(args, 128, "", "fatal: Authentication failed\n")
+        return real_git(repo_path, *args, **kwargs)
+
+    monkeypatch.setattr(collect_and_sync, "git", fake_git)
+    assert collect_and_sync.main(["--check", "--publish-dir", str(repo)]) == 1
+    out = capsys.readouterr().out
+    assert "[通过] 数据仓库 allen/tender-radar-data：私有" in out
+    assert "[问题] 连不上数据仓库：fatal: Authentication failed" in out
