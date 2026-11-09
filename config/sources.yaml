@@ -609,7 +609,7 @@ sources:
   risk_level: 高
   source_weight: 0.25
   failure_alert_threshold: 2
-  base_url: https://ggzy.fgw.henan.gov.cn/
+  base_url: https://hnsggzyjy.henan.gov.cn/
   crawler: regional_static
   province: 河南省
   query_strategy: crawler_managed
@@ -617,14 +617,17 @@ sources:
   max_items: 8
   result_limit: 6
   min_relevance_score: 35
-  source_timeout_seconds: 8
+  source_timeout_seconds: 25
   request_timeout: 6
   broad_match: true
   categories:
-  - name: 首页交易信息
+  - name: 交易中心公开招标采购公告
     path: /
     announcement_type: 招标/采购公告
-  notes: 使用河南省公共资源交易在线监管服务平台公开首页做低频扫描；河南交易中心主站在本机 SSL 握手不稳定，失败时由中国政府采购网河南分地区检索兜底。
+    include_url_patterns:
+    - /jyxx/002001/002001001/
+    - /jyxx/002002/002002001/
+  notes: 使用河南省公共资源交易中心公开公告；该主机使用标准P-256协商并保持证书校验，来源名称保留以兼容已有筛选配置。
 - name: 广东省公共资源交易平台
   enabled: true
   default_selected: false

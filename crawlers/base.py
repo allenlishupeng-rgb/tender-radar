@@ -9,6 +9,7 @@ from requests import Response
 from config.settings import REQUEST_INTERVAL_SECONDS, REQUEST_TIMEOUT, USER_AGENT
 from crawlers.errors import friendly_error_message
 from database.models import Tender
+from utils.http_transport import configure_public_session
 from parsers.extractors import annotate_deadline_fields
 from scoring.rules import priority_from_score, score_tender
 
@@ -26,6 +27,7 @@ class BaseCrawler:
         self.source_config = source_config or {}
         self.request_interval = request_interval
         self.session = requests.Session()
+        configure_public_session(self.session)
         # Some government platforms reject or break through system proxy settings.
         # The tool is local-only and should request public pages directly.
         self.session.trust_env = False
@@ -47,6 +49,7 @@ class BaseCrawler:
         if robots_url not in self._robots_cache:
             try:
                 with requests.Session() as session:
+                    configure_public_session(session)
                     session.trust_env = False
                     if self.remaining_seconds() <= 0:
                         return False

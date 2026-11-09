@@ -1,5 +1,6 @@
 import json
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from datetime import datetime
@@ -15,6 +16,7 @@ if str(ROOT_DIR) not in sys.path:
 from config.settings import EXPORT_DIR, KEYWORDS_PATH, SOURCES_PATH, USER_AGENT
 from crawlers.registry import CRAWLER_REGISTRY
 from crawlers.runner import load_yaml
+from utils.http_transport import configure_public_session
 
 
 DEFAULT_PROBE_QUERY = "项目"
@@ -82,6 +84,7 @@ def probe_result_links(session: requests.Session, tenders: list) -> list[dict]:
 
 def check_source(source: dict, keywords: dict) -> dict:
     session = requests.Session()
+    configure_public_session(session)
     session.trust_env = False
     session.headers.update({"User-Agent": USER_AGENT})
 
@@ -97,16 +100,25 @@ def check_source(source: dict, keywords: dict) -> dict:
         "message": "",
     }
 
-    result["base"] = probe_url(session, source.get("base_url", ""))
+    base_url = source.get("base_url", "")
+    if source.get("crawler") == "enterprise_news" and base_url == "config/enterprise_companies.yaml":
+        exists = (ROOT_DIR / base_url).is_file()
+        result['base'] = {'ok': exists, 'status': '本地配置' if exists else '缺失',
+                          'final_url': base_url, 'message': '' if exists else '企业池配置不存在'}
+    else:
+        result["base"] = probe_url(session, base_url)
     crawler_cls = CRAWLER_REGISTRY.get(source.get("crawler"))
     if not crawler_cls:
         result["status"] = "未接入"
         result["message"] = "没有找到 crawler adapter"
+        session.close()
         return result
 
+    crawler = None
     try:
         probe_config = trim_source_config(source)
         crawler = crawler_cls(keywords, source_config=probe_config, request_interval=0)
+        crawler.execution_deadline = time.monotonic() + probe_config['source_timeout_seconds']
         probe_days = max(PROBE_DAYS, int(source.get("lookback_days", PROBE_DAYS) or PROBE_DAYS))
         tenders = crawler.search(query=source_query(source), days=probe_days)
         result["count"] = len(tenders)
@@ -115,12 +127,16 @@ def check_source(source: dict, keywords: dict) -> dict:
         result["sample_links"] = probe_result_links(session, tenders)
     except Exception as exc:
         result["message"] = short_error(exc)
+    finally:
+        if crawler is not None:
+            crawler.close()
+        session.close()
 
     link_ok = all(item["ok"] for item in result["sample_links"]) if result["sample_links"] else False
     has_warning = bool(result.get("message"))
     if result["base"].get("ok") and result["crawl_ok"] and link_ok and not has_warning:
         result["status"] = "可用"
-    elif result["base"].get("ok") and result["crawl_ok"]:
+    elif result["crawl_ok"]:
         result["status"] = "可抓取，部分详情需复核"
     elif result["base"].get("ok"):
         result["status"] = "官网可访问，接口无样本/需复核"
