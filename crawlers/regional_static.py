@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import date, datetime, timedelta
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode, urljoin, urlparse
 
 from bs4 import BeautifulSoup
 
@@ -122,6 +122,12 @@ def parse_static_list_html(
         if not any(token in href for token in ["Detail", "detail", "newDetail", ".html", ".jhtml", "guid="]):
             continue
         source_url = urljoin(base_url, href)
+        # Static navigation endpoints are not notices, even when their labels
+        # contain "项目" and pass the health probe's broad query.
+        filename = urlparse(source_url).path.rstrip('/').rsplit('/', 1)[-1].lower()
+        if filename in {'index.html', 'index.htm', 'list.html', 'list.htm',
+                        'trading.html', 'subpage.html', 'transaction_notice.html'}:
+            continue
         include_patterns = category.get("include_url_patterns") or []
         if include_patterns and not any(pattern in source_url or pattern in href for pattern in include_patterns):
             continue

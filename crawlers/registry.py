@@ -14,6 +14,7 @@ from crawlers.liaoning_public import LiaoningPublicCrawler
 from crawlers.neimenggu_public import NeimengguPublicCrawler
 from crawlers.regional_static import RegionalStaticCrawler
 from crawlers.shandong_public import ShandongPublicCrawler
+from crawlers.shaanxi_public import ShaanxiPublicCrawler
 from crawlers.shanghai_public import ShanghaiPublicCrawler
 from crawlers.suzhou_public import SuzhouPublicCrawler
 from crawlers.xinjiang_public import XinjiangPublicCrawler
@@ -38,6 +39,7 @@ CRAWLER_REGISTRY = {
     "neimenggu_public": NeimengguPublicCrawler,
     "regional_static": RegionalStaticCrawler,
     "shandong_public": ShandongPublicCrawler,
+    "shaanxi_public": ShaanxiPublicCrawler,
     "shanghai_public": ShanghaiPublicCrawler,
     "suzhou_public": SuzhouPublicCrawler,
     "changsha_public": ChangshaPublicCrawler,

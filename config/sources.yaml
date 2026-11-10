@@ -727,21 +727,21 @@ sources:
   enabled: true
   default_selected: false
   base_url: https://www.sxggzyjy.cn/
-  crawler: regional_static
+  crawler: shaanxi_public
   province: 陕西省
-  query_strategy: crawler_managed
+  max_terms: 4
   max_pages: 1
   max_items: 8
   result_limit: 6
   min_relevance_score: 30
-  source_timeout_seconds: 10
+  source_timeout_seconds: 45
   request_timeout: 8
-  broad_match: true
+  broad_match: false
   categories:
   - name: 首页交易信息
     path: /
     announcement_type: 招标/采购公告
-  notes: 使用全国公共资源交易平台（陕西省）公开首页交易信息做低频扫描；不登录、不绕过验证码或反爬。
+  notes: 使用官网 subPage_fullsearch.js 调用的公开全文检索接口，按关键词和发布日期检索，保持证书校验；不把首页栏目或新闻作为公告。
 - name: 甘肃省公共资源交易网
   enabled: true
   default_selected: false
